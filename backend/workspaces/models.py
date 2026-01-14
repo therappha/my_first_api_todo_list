@@ -33,7 +33,7 @@ class WorkspaceMember(models.Model):
 class Workspace(models.Model):
 	id = models.AutoField(primary_key=True)
 	name = models.CharField(max_length=30, null=False, default="My Workspace")
-	description = models.CharField(max_length=200, blank=True, )
+	description = models.CharField(max_length=200, blank=True )
 	#labels= models.ManyToManyField(Label, related_name="labels")
 	owner = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="my_workspaces")
 	created_at = models.DateField(auto_now_add=True )
