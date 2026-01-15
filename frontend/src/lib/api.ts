@@ -127,6 +127,16 @@ export const api = {
     return res.json();
   },
 
+  updateProfile: async (full_name: string): Promise<User> => {
+    const res = await fetch(`${API_BASE}/users/me/`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ full_name }),
+    });
+    if (!res.ok) throw new Error('Failed to update profile');
+    return res.json();
+  },
+
   getUser: async (id: number): Promise<User> => {
     const res = await fetch(`${API_BASE}/users/${id}/`, {
       headers: getAuthHeaders(),
@@ -208,7 +218,14 @@ export const api = {
     });
     if (!res.ok) throw new Error('Failed to send invite');
   },
-
+  kickMember: async (workspaceId: number, username: string): Promise<void> => {
+    const res = await fetch(`${API_BASE}/workspaces/${workspaceId}/kick/`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ username }),
+    });
+    if (!res.ok) throw new Error('Failed to kick member');
+  },
   // Projects
   getProjects: async (page = 1): Promise<PaginatedResponse<ProjectSummary>> => {
     const res = await fetch(`${API_BASE}/projects/?page=${page}`, {

@@ -203,7 +203,7 @@ const ProjectView = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b">
+      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm" onClick={() => navigate(`/workspace/${project.workspace}`)}>
@@ -214,6 +214,7 @@ const ProjectView = () => {
               <h1 className="text-xl font-semibold">{project.name}</h1>
               <p className="text-sm text-muted-foreground">{project.description}</p>
             </div>
+            <span className="text-xs text-muted-foreground font-medium">DJANGO TODOLIST</span>
           </div>
           <div className="flex items-center gap-2">
             <Dialog open={createOpen} onOpenChange={setCreateOpen}>
@@ -296,7 +297,7 @@ const ProjectView = () => {
               onDrop={() => handleDrop(col.id)}
             >
               <h3 className="mb-4 font-medium">{col.label}</h3>
-              <div className="space-y-2">
+              <div className="space-y-2 min-h-[320px]">
                 {getTasksByStatus(col.id).map((task) => (
                   <Card
                     key={task.id}

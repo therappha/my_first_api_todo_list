@@ -67,9 +67,9 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b">
+      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-          <h1 className="text-xl font-semibold">Workspaces</h1>
+          <h1 className="text-xl font-semibold">DJANGO TODOLIST</h1>
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm" onClick={() => navigate('/profile')}>
               <User className="mr-2 h-4 w-4" />

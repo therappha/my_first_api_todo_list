@@ -9,13 +9,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ArrowLeft, Plus, Trash2, Users, UserPlus } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Users, UserPlus, UserMinus } from 'lucide-react';
 import { toast } from 'sonner';
 
 const WorkspaceView = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isAuthenticated, isLoading: authLoading } = useAuthContext();
+  const { isAuthenticated, isLoading: authLoading, user: currentUser } = useAuthContext();
   const [workspace, setWorkspace] = useState<WorkspaceDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
@@ -91,6 +91,68 @@ const WorkspaceView = () => {
     }
   };
 
+  const handleKickMember = async (username: string) => {
+    if (!confirm(`Remove ${username} from this workspace?`)) return;
+    try {
+      await api.kickMember(Number(id), username);
+      toast.success('Member removed successfully');
+      fetchWorkspace(); // Refresh to update member list
+    } catch {
+      toast.error('Failed to remove member');
+    }
+  };
+
+  const canKickMember = (member: any) => {
+    console.log('=== Debugging canKickMember ===');
+    console.log('currentUser:', currentUser);
+    console.log('workspace:', workspace);
+    console.log('member:', member);
+
+    if (!currentUser || !workspace) {
+      console.log('Missing currentUser or workspace');
+      return false;
+    }
+
+    // Cannot kick yourself
+    if (member.user_name === currentUser.username) {
+      console.log('Cannot kick yourself');
+      return false;
+    }
+
+    // Find current user's role in this workspace
+    const currentUserMember = workspace.members.find(
+      m => m.user_name === currentUser.username
+    );
+
+    console.log('currentUserMember:', currentUserMember);
+
+    if (!currentUserMember) {
+      console.log('Current user not found in workspace members');
+      return false;
+    }
+
+    const currentUserRole = currentUserMember.role;
+    const targetRole = member.role;
+
+    console.log('currentUserRole:', currentUserRole);
+    console.log('targetRole:', targetRole);
+
+    // Owner can kick anyone except other owners
+    if (currentUserRole === 'owner' && targetRole !== 'owner') {
+      console.log('Owner can kick this member');
+      return true;
+    }
+
+    // Admin can kick editors and viewers
+    if (currentUserRole === 'admin' && (targetRole === 'editor' || targetRole === 'viewer')) {
+      console.log('Admin can kick this member');
+      return true;
+    }
+
+    console.log('No permission to kick this member');
+    return false;
+  };
+
   if (authLoading || isLoading) {
     return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
   }
@@ -98,48 +160,56 @@ const WorkspaceView = () => {
   if (!workspace) return null;
 
   return (
-    <div className="flex min-h-screen">
-      {/* Sidebar */}
-      <aside className="w-64 border-r bg-sidebar-background">
-        <div className="p-4">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/')}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
-        </div>
-        <div className="px-4 py-2">
-          <h2 className="mb-2 text-lg font-semibold">{workspace.name}</h2>
-          <p className="text-sm text-muted-foreground">{workspace.description}</p>
-        </div>
-        <div className="px-4 py-4">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-              <Users className="h-4 w-4" />
-              Members ({workspace.members.length})
+    <div className="flex min-h-screen flex-col">
+      {/* Header */}
+      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="sm" onClick={() => navigate('/')}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Button>
+            <div>
+              <h1 className="text-xl font-semibold">{workspace.name}</h1>
+              <p className="text-sm text-muted-foreground">{workspace.description}</p>
             </div>
-            <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
-              <DialogTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <UserPlus className="h-4 w-4" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Invite User</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 pt-4">
-                  <Input
-                    placeholder="Enter username"
-                    value={inviteUsername}
-                    onChange={(e) => setInviteUsername(e.target.value)}
-                  />
-                  <Button onClick={handleInviteUser} className="w-full">
-                    Send Invite
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
           </div>
+          <span className="text-xs text-muted-foreground font-medium">DJANGO TODOLIST</span>
+        </div>
+      </header>
+
+      <div className="flex flex-1">
+        {/* Sidebar */}
+        <aside className="w-64 border-r bg-sidebar-background">
+          <div className="px-4 py-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <Users className="h-4 w-4" />
+                Members ({workspace.members.length})
+              </div>
+              <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <UserPlus className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Invite User</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 pt-4">
+                    <Input
+                      placeholder="Enter username"
+                      value={inviteUsername}
+                      onChange={(e) => setInviteUsername(e.target.value)}
+                    />
+                    <Button onClick={handleInviteUser} className="w-full">
+                      Send Invite
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
           <ScrollArea className="mt-2 h-48">
             {workspace.members.map((member) => {
               // Use full_name as display name and user_name as username handle
@@ -148,19 +218,36 @@ const WorkspaceView = () => {
               const initials = displayName.charAt(0).toUpperCase();
 
               return (
-                <div key={member.id} className="flex items-center gap-2 py-2">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src="" />
-                    <AvatarFallback>
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="text-sm font-medium">{displayName}</p>
-                    <p className="text-xs text-muted-foreground">
-                      @{username} • {member.role}
-                    </p>
+                <div key={member.id} className="flex items-center justify-between py-2">
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src="" />
+                      <AvatarFallback>
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-sm font-medium">{displayName}</p>
+                      <p className="text-xs text-muted-foreground">
+                        @{username} • {member.role}
+                      </p>
+                    </div>
                   </div>
+                  {/* Temporary: always show button for debugging */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      console.log('Kick button clicked for:', username);
+                      handleKickMember(username);
+                    }}
+                    className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                    title={`Kick ${username} (Debug mode)`}
+                  >
+                    <UserMinus className="h-4 w-4" />
+                  </Button>
+                  {/* Original condition: {canKickMember(member) && (...)} */}
                 </div>
               );
             })}
@@ -231,8 +318,7 @@ const WorkspaceView = () => {
               </Card>
             ))}
           </div>
-        )}
-      </main>
+      </div>
     </div>
   );
 };
