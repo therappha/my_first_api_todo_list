@@ -63,6 +63,7 @@ class Task(models.Model):
 	name = models.CharField(max_length=40, null=False, default="My_Task")
 	project = models.ForeignKey("workspaces.Project", related_name="tasks", on_delete=models.CASCADE)
 	status = models.CharField(max_length=50, choices=StatusChoices.choices, null=False, default=StatusChoices.NOT_STARTED)
+	description = models.CharField(max_length=100, blank=True)
 	labels = models.ManyToManyField("workspaces.TaskLabel", related_name="tasks", blank=True)
 	assignees = models.ManyToManyField("workspaces.WorkspaceMember", related_name="tasks", blank=True)
 

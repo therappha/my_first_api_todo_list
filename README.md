@@ -203,6 +203,7 @@ returns 200 success with project details and tasks if user has access or admin
 		{
 		"id": 2,
 		"name": "MY FIRST TASK",
+		"description": "This is my first task in the todo-list application",
 		"status": "not_started",
 		"project": 1,
 		"labels": [],

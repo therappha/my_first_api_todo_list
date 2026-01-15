@@ -17,9 +17,17 @@ class WorkspaceSerializer(serializers.ModelSerializer):
 		return (Project.objects.filter(workspace = obj).count())
 
 class WorkspaceMemberSerializer(serializers.ModelSerializer):
+	user_name = serializers.SerializerMethodField()
+	full_name = serializers.SerializerMethodField()
+
 	class Meta:
 		model = WorkspaceMember
-		fields = ['id', 'role', 'joined_at', 'user']
+		fields = ['id', 'role', 'joined_at', 'user_name', 'full_name']
+
+	def get_user_name(self, obj):
+		return obj.user.username
+	def get_full_name(self, obj):
+		return obj.user.full_name
 
 class TaskSerializer(serializers.ModelSerializer):
 	class Meta:
