@@ -6,7 +6,7 @@ Simple todo-list endpoints using DJANGO REST FRAMEWORK
 ## ENDPOINTS
 
 
-POST /register/         # Register a new user
+POST /register/
 ```
 	headers:
 	{
@@ -23,7 +23,7 @@ POST /register/         # Register a new user
 returns 201 success if created or 400 bad request if username already exists
 
 
-POST	 /login/            # Login a user
+POST /login/
 
 ```
 	headers:
@@ -45,7 +45,7 @@ returns 200 success with tokens
 ```
 
 ```
-GET     /users/me/ return current logged in user details
+GET /users/me/
 ```
 	headers:
 	{
@@ -61,7 +61,7 @@ returns 200 success with user details
 }
 ```
 
-GET /workspaces/ # Get all workspaces for the logged in user or all workspaces if staff or superuser
+GET /workspaces/
 ```
 	headers:
 	{
