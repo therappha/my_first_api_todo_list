@@ -45,7 +45,7 @@ returns 200 success with tokens
 	}
 ```
 
-```
+
 GET /users/me/
 ```
 	headers:
