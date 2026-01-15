@@ -318,9 +318,10 @@ const WorkspaceView = () => {
               </Card>
             ))}
           </div>
-      </div>
-    </div>
-  );
-};
-
+  )
+}
+  </main>
+</div>
+</div>
+  )}
 export default WorkspaceView;
