@@ -16,9 +16,14 @@ import { toast } from 'sonner';
 
 interface Member {
   id: string;
-  name: string;
-  username: string;
-  avatar: string | null;
+  role: string;
+  joined_at: string;
+  user: {
+    id: number;
+    username: string;
+    email: string;
+    avatar?: string;
+  };
 }
 
 interface ManageMembersDialogProps {
@@ -42,7 +47,8 @@ export function ManageMembersDialog({
   const [isLoading, setIsLoading] = useState(false);
   const [foundUser, setFoundUser] = useState<Member | null>(null);
 
-  const getInitials = (name: string) => {
+  const getInitials = (name: string | undefined) => {
+    if (!name) return 'U';
     return name
       .split(' ')
       .map(n => n[0])
@@ -57,7 +63,7 @@ export function ManageMembersDialog({
 
     if (user) {
       // Check if already a member
-      if (currentMembers.some(m => m.id === user.id)) {
+      if (currentMembers.some(m => m.user.id.toString() === user.id)) {
         toast.error('This user is already a member');
         setFoundUser(null);
       } else {
@@ -73,7 +79,7 @@ export function ManageMembersDialog({
     if (!foundUser) return;
 
     setIsLoading(true);
-    await onAddMember(foundUser.id);
+    await onAddMember(foundUser.id.toString());
     setFoundUser(null);
     setSearchUsername('');
     setIsLoading(false);
@@ -148,14 +154,14 @@ export function ManageMembersDialog({
                 >
                   <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10">
-                      <AvatarImage src={member.avatar || undefined} alt={member.name} />
+                      <AvatarImage src={member.user?.avatar || undefined} alt={member.user?.username} />
                       <AvatarFallback className="bg-secondary text-secondary-foreground">
-                        {getInitials(member.name)}
+                        {getInitials(member.user?.username)}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-medium text-sm">{member.name}</p>
-                      <p className="text-xs text-muted-foreground">@{member.username}</p>
+                      <p className="font-medium text-sm">{member.user?.username}</p>
+                      <p className="text-xs text-muted-foreground">{member.role}</p>
                     </div>
                   </div>
                   {currentMembers.length > 1 && (
@@ -163,7 +169,7 @@ export function ManageMembersDialog({
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                      onClick={() => handleRemoveMember(member.id)}
+                      onClick={() => handleRemoveMember(member.user.id.toString())}
                       disabled={isLoading}
                     >
                       <X className="h-4 w-4" />

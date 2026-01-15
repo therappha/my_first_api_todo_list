@@ -11,7 +11,7 @@ import { mockWorkspaces, mockUsers, getAuthToken, getCurrentUser } from './mock-
 export async function getWorkspaces(options = {}) {
   const { page = 1, limit = 6 } = options;
 
-  const token = getAuthToken() || localStorage.getItem('auth_token');
+  const token = localStorage.getItem('auth_token');
   if (!token) {
     return { success: false, error: 'Not authenticated' };
   }
@@ -58,26 +58,34 @@ export async function getWorkspaces(options = {}) {
  * @returns {Promise<{success: boolean, data?: object, error?: string}>}
  */
 export async function getWorkspace(workspaceId) {
-  // TODO: Replace with real API call
-  // GET /api/workspaces/{workspaceId}
-  // Headers: { 'Authorization': `Bearer ${token}` }
-
-  await new Promise(resolve => setTimeout(resolve, 200));
-
-  const workspace = mockWorkspaces.find(w => w.id === workspaceId);
-
-  if (!workspace) {
-    return { success: false, error: 'Workspace not found' };
+  const token = localStorage.getItem('auth_token');
+  if (!token) {
+    return { success: false, error: 'Not authenticated' };
   }
 
-  const workspaceWithMembers = {
-    ...workspace,
-    memberDetails: workspace.members.map(memberId =>
-      mockUsers.find(u => u.id === memberId)
-    ).filter(Boolean)
-  };
+  try {
+    const response = await fetch(`http://localhost:8000/workspaces/${workspaceId}/`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      }
+    });
 
-  return { success: true, data: workspaceWithMembers };
+    if (!response.ok) {
+      if (response.status === 404) {
+        return { success: false, error: 'Workspace not found' };
+      }
+      const errorData = await response.json();
+      return { success: false, error: errorData.detail || 'Failed to fetch workspace' };
+    }
+
+    const workspace = await response.json();
+
+    return { success: true, data: workspace };
+  } catch (error) {
+    return { success: false, error: 'Network error. Please try again.' };
+  }
 }
 
 /**

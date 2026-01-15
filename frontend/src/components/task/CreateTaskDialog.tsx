@@ -43,7 +43,7 @@ interface CreateTaskDialogProps {
 export function CreateTaskDialog({ workspaceId, open, onOpenChange, onSubmit }: CreateTaskDialogProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [status, setStatus] = useState('NOT_STARTED');
+  const [status, setStatus] = useState('not_started');
   const [assignees, setAssignees] = useState<string[]>([]);
   const [labelId, setLabelId] = useState<string | null>(null);
   const [labels, setLabels] = useState<TaskLabel[]>([]);
@@ -69,7 +69,7 @@ export function CreateTaskDialog({ workspaceId, open, onOpenChange, onSubmit }: 
     setIsLoading(false);
     setTitle('');
     setDescription('');
-    setStatus('NOT_STARTED');
+    setStatus('not_started');
     setAssignees([]);
     setLabelId(null);
     onOpenChange(false);
@@ -124,9 +124,9 @@ export function CreateTaskDialog({ workspaceId, open, onOpenChange, onSubmit }: 
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="NOT_STARTED">Not Started</SelectItem>
-                  <SelectItem value="ONGOING">Ongoing</SelectItem>
-                  <SelectItem value="IN_REVIEW">In Review</SelectItem>
+                  <SelectItem value="not_started">Not Started</SelectItem>
+                  <SelectItem value="in_progress">In Progress</SelectItem>
+                  <SelectItem value="in_review">In Review</SelectItem>
                 </SelectContent>
               </Select>
             </div>

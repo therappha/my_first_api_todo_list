@@ -12,11 +12,25 @@ import { getWorkspace, addWorkspaceMember, removeWorkspaceMember } from '@/api/w
 import { getProjects, createProject, updateProject, deleteProject } from '@/api/projects.js';
 import { toast } from 'sonner';
 
+// Helper function to get initials from username
+const getInitials = (name: string) => {
+  return name
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+};
+
 interface Member {
   id: string;
-  name: string;
-  username: string;
-  avatar: string | null;
+  role: string;
+  joined_at: string;
+  user: {
+    id: number;
+    username: string;
+    email: string;
+  };
 }
 
 interface Project {
@@ -30,7 +44,7 @@ interface Workspace {
   id: string;
   name: string;
   description: string;
-  memberDetails: Member[];
+  members: Member[];
 }
 
 export default function WorkspacePage() {
@@ -52,17 +66,16 @@ export default function WorkspacePage() {
   const loadData = async () => {
     setIsLoading(true);
 
-    const [wsResult, projectsResult] = await Promise.all([
-      getWorkspace(workspaceId!),
-      getProjects(workspaceId!)
-    ]);
+    const wsResult = await getWorkspace(workspaceId!);
 
     if (wsResult.success && wsResult.data) {
       setWorkspace(wsResult.data as Workspace);
-    }
-
-    if (projectsResult.success && projectsResult.data) {
-      setProjects(projectsResult.data as Project[]);
+      // A API já retorna os projetos dentro do workspace
+      if (wsResult.data.projects) {
+        setProjects(wsResult.data.projects);
+      }
+    } else {
+      toast.error(wsResult.error || 'Failed to load workspace');
     }
 
     setIsLoading(false);
@@ -173,18 +186,18 @@ export default function WorkspacePage() {
               onClick={() => setShowMembers(true)}
             >
               <div className="flex -space-x-2">
-                {workspace?.memberDetails.slice(0, 5).map((member) => (
+                {workspace?.members?.slice(0, 5).map((member) => (
                   <Avatar key={member.id} className="h-8 w-8 border-2 border-background">
-                    <AvatarImage src={member.avatar || undefined} alt={member.name} />
+                    <AvatarImage src={member.user?.avatar || undefined} alt={member.user?.username} />
                     <AvatarFallback className="bg-secondary text-secondary-foreground text-xs">
-                      {getInitials(member.name)}
+                      {getInitials(member.user?.username || 'U')}
                     </AvatarFallback>
                   </Avatar>
                 ))}
-                {(workspace?.memberDetails.length || 0) > 5 && (
+                {(workspace?.members?.length || 0) > 5 && (
                   <div className="h-8 w-8 rounded-full bg-muted border-2 border-background flex items-center justify-center">
                     <span className="text-xs font-medium text-muted-foreground">
-                      +{(workspace?.memberDetails.length || 0) - 5}
+                      +{(workspace?.members.length || 0) - 5}
                     </span>
                   </div>
                 )}
@@ -245,7 +258,7 @@ export default function WorkspacePage() {
 
       <ManageMembersDialog
         workspaceId={workspaceId || ''}
-        currentMembers={workspace?.memberDetails || []}
+        currentMembers={workspace?.members || []}
         open={showMembers}
         onOpenChange={setShowMembers}
         onAddMember={handleAddMember}

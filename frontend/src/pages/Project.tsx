@@ -27,14 +27,12 @@ interface Assignee {
 
 interface Task {
   id: string;
-  title: string;
-  description: string;
+  name: string;
+  description?: string;
   status: string;
+  project: number;
+  labels: string[];
   assignees: string[];
-  labelId: string | null;
-  label?: Label | null;
-  assigneeDetails: Assignee[];
-  order: number;
 }
 
 interface Project {
@@ -42,13 +40,14 @@ interface Project {
   name: string;
   description: string;
   goal: string;
-  workspaceId: string;
+  workspace: number;
+  tasks: Task[];
 }
 
 const STATUS_COLORS = {
-  NOT_STARTED: 'hsl(215, 16%, 47%)',
-  ONGOING: 'hsl(217, 91%, 60%)',
-  IN_REVIEW: 'hsl(38, 92%, 50%)',
+  not_started: 'hsl(215, 16%, 47%)',
+  in_progress: 'hsl(217, 91%, 60%)',
+  in_review: 'hsl(38, 92%, 50%)',
 };
 
 export default function ProjectPage() {
@@ -87,17 +86,17 @@ export default function ProjectPage() {
   const loadData = async () => {
     setIsLoading(true);
 
-    const [projectResult, tasksResult] = await Promise.all([
-      getProject(projectId!),
-      getTasks(projectId!)
-    ]);
+    const projectResult = await getProject(projectId!);
 
     if (projectResult.success && projectResult.data) {
-      setProject(projectResult.data as Project);
-    }
-
-    if (tasksResult.success && tasksResult.data) {
-      setTasks(tasksResult.data as Task[]);
+      const project = projectResult.data as Project;
+      setProject(project);
+      // A API já retorna as tasks dentro do projeto
+      if (project.tasks) {
+        setTasks(project.tasks);
+      }
+    } else {
+      toast.error(projectResult.error || 'Failed to load project');
     }
 
     setIsLoading(false);
@@ -189,7 +188,7 @@ export default function ProjectPage() {
     let newStatus = activeTask.status;
 
     // Check if dropped on a column
-    if (['NOT_STARTED', 'ONGOING', 'IN_REVIEW'].includes(overId)) {
+    if (['not_started', 'in_progress', 'in_review'].includes(overId)) {
       newStatus = overId;
     } else {
       // Dropped on another task - get its status
@@ -269,28 +268,28 @@ export default function ProjectPage() {
         >
           <div className="flex gap-4 overflow-x-auto pb-4">
             <TaskColumn
-              id="NOT_STARTED"
+              id="not_started"
               title="Not Started"
-              tasks={getTasksByStatus('NOT_STARTED')}
-              color={STATUS_COLORS.NOT_STARTED}
+              tasks={getTasksByStatus('not_started')}
+              color={STATUS_COLORS.not_started}
               onEditTask={(task) => setEditTask(task as Task)}
               onArchiveTask={handleArchiveTask}
               onDeleteTask={handleDeleteTask}
             />
             <TaskColumn
-              id="ONGOING"
-              title="Ongoing"
-              tasks={getTasksByStatus('ONGOING')}
-              color={STATUS_COLORS.ONGOING}
+              id="in_progress"
+              title="In Progress"
+              tasks={getTasksByStatus('in_progress')}
+              color={STATUS_COLORS.in_progress}
               onEditTask={(task) => setEditTask(task as Task)}
               onArchiveTask={handleArchiveTask}
               onDeleteTask={handleDeleteTask}
             />
             <TaskColumn
-              id="IN_REVIEW"
+              id="in_review"
               title="In Review"
-              tasks={getTasksByStatus('IN_REVIEW')}
-              color={STATUS_COLORS.IN_REVIEW}
+              tasks={getTasksByStatus('in_review')}
+              color={STATUS_COLORS.in_review}
               onEditTask={(task) => setEditTask(task as Task)}
               onArchiveTask={handleArchiveTask}
               onDeleteTask={handleDeleteTask}

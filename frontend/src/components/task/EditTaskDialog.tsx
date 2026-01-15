@@ -29,11 +29,12 @@ interface TaskLabel {
 
 interface Task {
   id: string;
-  title: string;
-  description: string;
+  title?: string;    // Estrutura antiga
+  name?: string;     // Estrutura nova da API
+  description?: string;
   status: string;
   assignees: string[];
-  labelId: string | null;
+  labelId?: string | null;
 }
 
 interface EditTaskDialogProps {
@@ -42,11 +43,12 @@ interface EditTaskDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (id: string, data: {
-    title: string;
-    description: string;
+    title?: string;
+    name?: string;
+    description?: string;
     status: string;
     assignees: string[];
-    labelId: string | null;
+    labelId?: string | null;
   }) => Promise<void>;
 }
 
@@ -61,11 +63,11 @@ export function EditTaskDialog({ task, workspaceId, open, onOpenChange, onSubmit
 
   useEffect(() => {
     if (task) {
-      setTitle(task.title);
-      setDescription(task.description);
+      setTitle(task.title || task.name || '');  // Compatibilidade com ambas estruturas
+      setDescription(task.description || '');
       setStatus(task.status);
-      setAssignees(task.assignees);
-      setLabelId(task.labelId);
+      setAssignees(task.assignees || []);
+      setLabelId(task.labelId || null);
     }
   }, [task]);
 
@@ -87,7 +89,14 @@ export function EditTaskDialog({ task, workspaceId, open, onOpenChange, onSubmit
     if (!task) return;
 
     setIsLoading(true);
-    await onSubmit(task.id, { title, description, status, assignees, labelId });
+    await onSubmit(task.id, {
+      title,
+      name: title,  // Enviar ambos para compatibilidade
+      description,
+      status,
+      assignees,
+      labelId
+    });
     setIsLoading(false);
     onOpenChange(false);
   };
@@ -141,9 +150,10 @@ export function EditTaskDialog({ task, workspaceId, open, onOpenChange, onSubmit
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="NOT_STARTED">Not Started</SelectItem>
-                  <SelectItem value="ONGOING">Ongoing</SelectItem>
-                  <SelectItem value="IN_REVIEW">In Review</SelectItem>
+                  <SelectItem value="not_started">Not Started</SelectItem>
+                  <SelectItem value="in_progress">In Progress</SelectItem>
+                  <SelectItem value="in_review">In Review</SelectItem>
+                  <SelectItem value="archived">Archived</SelectItem>
                 </SelectContent>
               </Select>
             </div>

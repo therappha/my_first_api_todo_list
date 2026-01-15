@@ -28,9 +28,9 @@ interface Assignee {
 interface TaskCardProps {
   id: string;
   title: string;
-  description: string;
+  description?: string;
   label?: Label | null;
-  assignees: Assignee[];
+  assignees?: Assignee[] | string[];  // Pode ser array de objetos ou de strings
   onEdit: () => void;
   onArchive: () => void;
   onDelete: () => void;
@@ -133,22 +133,36 @@ export function TaskCard({
               <div />
             )}
 
-            {assignees.length > 0 && (
+            {(assignees && assignees.length > 0) && (
               <div className="flex -space-x-1">
-                {assignees.slice(0, 3).map((assignee) => (
-                  <Avatar key={assignee.id} className="h-5 w-5 border border-card">
-                    <AvatarImage src={assignee.avatar || undefined} alt={assignee.name} />
-                    <AvatarFallback className="bg-secondary text-secondary-foreground text-[8px]">
-                      {getInitials(assignee.name)}
-                    </AvatarFallback>
-                  </Avatar>
-                ))}
-                {assignees.length > 3 && (
-                  <div className="h-5 w-5 rounded-full bg-muted border border-card flex items-center justify-center">
-                    <span className="text-[8px] font-medium text-muted-foreground">
-                      +{assignees.length - 3}
-                    </span>
-                  </div>
+                {/* Se assignees for array de strings, só mostra contadores */}
+                {typeof assignees[0] === 'string' ? (
+                  assignees.length > 0 && (
+                    <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                      <span className="text-[8px] font-medium text-primary-foreground">
+                        {assignees.length}
+                      </span>
+                    </div>
+                  )
+                ) : (
+                  /* Se assignees for array de objetos, renderiza avatars */
+                  <>
+                    {(assignees as Assignee[]).slice(0, 3).map((assignee) => (
+                      <Avatar key={assignee.id} className="h-5 w-5 border border-card">
+                        <AvatarImage src={assignee.avatar || undefined} alt={assignee.name} />
+                        <AvatarFallback className="bg-secondary text-secondary-foreground text-[8px]">
+                          {getInitials(assignee.name)}
+                        </AvatarFallback>
+                      </Avatar>
+                    ))}
+                    {assignees.length > 3 && (
+                      <div className="h-5 w-5 rounded-full bg-muted border border-card flex items-center justify-center">
+                        <span className="text-[8px] font-medium text-muted-foreground">
+                          +{assignees.length - 3}
+                        </span>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}

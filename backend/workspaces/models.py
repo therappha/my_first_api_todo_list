@@ -63,8 +63,8 @@ class Task(models.Model):
 	name = models.CharField(max_length=40, null=False, default="My_Task")
 	project = models.ForeignKey("workspaces.Project", related_name="tasks", on_delete=models.CASCADE)
 	status = models.CharField(max_length=50, choices=StatusChoices.choices, null=False, default=StatusChoices.NOT_STARTED)
-	labels = models.ManyToManyField("workspaces.TaskLabel", related_name="tasks")
-	assignees = models.ManyToManyField("workspaces.WorkspaceMember", related_name="tasks")
+	labels = models.ManyToManyField("workspaces.TaskLabel", related_name="tasks", blank=True)
+	assignees = models.ManyToManyField("workspaces.WorkspaceMember", related_name="tasks", blank=True)
 
 	def __str__(self):
 		return f"{self.name} - {self.project.name}"

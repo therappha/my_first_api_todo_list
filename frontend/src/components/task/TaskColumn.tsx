@@ -70,10 +70,10 @@ export function TaskColumn({
             <TaskCard
               key={task.id}
               id={task.id}
-              title={task.title}
-              description={task.description}
+              title={task.name || task.title}  // Compatibilidade com ambas estruturas
+              description={task.description || ''}
               label={task.label}
-              assignees={task.assigneeDetails}
+              assignees={task.assignees || task.assigneeDetails || []}  // Fallback seguro
               onEdit={() => onEditTask(task)}
               onArchive={() => onArchiveTask(task.id)}
               onDelete={() => onDeleteTask(task.id)}
