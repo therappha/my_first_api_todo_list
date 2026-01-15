@@ -24,6 +24,7 @@ returns 201 success if created or 400 bad request if username already exists
 
 
 POST /login/
+returns 200 success with tokens
 
 ```
 	headers:
@@ -36,7 +37,6 @@ POST /login/
 		"password": "string"
 	}
 ```
-returns 200 success with tokens
 ```
 	{
 		"refresh": "token_string",
@@ -46,6 +46,7 @@ returns 200 success with tokens
 
 ```
 GET /users/me/
+returns 200 success with user details
 ```
 	headers:
 	{
@@ -54,7 +55,7 @@ GET /users/me/
 	}
 	body: none
 ```
-returns 200 success with user details
+returns 200 with user details for profile page
 ```
 {
 	{"username":"username","name":"full_name","avatarUrl":"avatarurl"}
@@ -62,6 +63,7 @@ returns 200 success with user details
 ```
 
 GET /workspaces/
+need: authentication
 ```
 	headers:
 	{
@@ -70,8 +72,8 @@ GET /workspaces/
 	}
 	body: none
 ```
-returns 200 success with list of workspaces
 
+returns 200 success with list of workspaces user is member of or all workspaces if admin
 ```
 	{
 		"count": 3,
