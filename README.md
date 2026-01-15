@@ -24,7 +24,7 @@ returns 201 success if created or 400 bad request if username already exists
 
 
 POST /login/
-returns 200 success with tokens
+
 
 ```
 	headers:
@@ -37,6 +37,7 @@ returns 200 success with tokens
 		"password": "string"
 	}
 ```
+returns 200 success with tokens
 ```
 	{
 		"refresh": "token_string",
@@ -46,7 +47,6 @@ returns 200 success with tokens
 
 ```
 GET /users/me/
-returns 200 success with user details
 ```
 	headers:
 	{
