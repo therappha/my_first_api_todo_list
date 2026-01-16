@@ -145,10 +145,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
 		user = self.request.user
 
 		if user.is_superuser or user.is_staff:
-			return Project.objects.all()
+			return Project.objects.all().prefetch_related("tasks")
 
 		user_workspaces = Workspace.objects.filter(memberships__user=user)
-		return Project.objects.filter(workspace__in=user_workspaces)
+		return Project.objects.filter(workspace__in=user_workspaces).prefetch_related("tasks")
 
 	def get_serializer_class(self):
 		if (self.action == 'retrieve'):

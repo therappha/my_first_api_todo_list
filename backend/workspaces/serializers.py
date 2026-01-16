@@ -42,15 +42,15 @@ class ProjectSerializer(serializers.ModelSerializer):
 
 
 class ProjectDetailSerializer(serializers.ModelSerializer):
-	#tasks = serializers.SerializerMethodField() #Maybe use Nested Serializers?
-	tasks = TaskSerializer(many=True, read_only=True)
+	tasks = serializers.SerializerMethodField()
+	#tasks = TaskSerializer(many=True, read_only=True) #Maybe use Nested Serializers?
 	class Meta:
 		model = Project
 		fields = ['id', 'name', 'description', 'workspace', 'goal', 'tasks']
 
-	# def get_tasks(self, obj):
-	# 	tasks = Task.objects.filter(project = obj)
-	# 	return TaskSerializer(tasks, many=True).data
+	def get_tasks(self, obj):
+		tasks = TaskSerializer(obj.tasks, many = True)
+		return tasks.data
 
 class WorkspaceDetailSerializer(serializers.ModelSerializer):
 
