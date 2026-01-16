@@ -32,11 +32,11 @@ class WorkspaceMember(models.Model):
 
 class Workspace(models.Model):
 	id = models.AutoField(primary_key=True)
-	name = models.CharField(max_length=30, null=False, default="My Workspace")
-	description = models.CharField(max_length=200, blank=True )
+	name = models.CharField(max_length=100, null=False, default="My Workspace")
+	description = models.CharField(max_length=300, blank=True )
 	#labels= models.ManyToManyField(Label, related_name="labels")
 	owner = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="my_workspaces")
-	created_at = models.DateField(auto_now_add=True )
+	created_at = models.DateField(auto_now_add=True, blank=True)
 
 	def __str__(self):
 		return self.name
@@ -45,7 +45,7 @@ class Project(models.Model):
 	id = models.AutoField(primary_key=True)
 	name = models.CharField(max_length=30, null=False, default="My_Project")
 	workspace = models.ForeignKey("workspaces.Workspace", on_delete=models.CASCADE, related_name="projects")
-	description = models.CharField(max_length=50, blank=False, )
+	description = models.CharField(max_length=50, blank=True )
 	goal = models.CharField(max_length=300, null=False, default="add project goal here")
 
 	def __str__(self):
@@ -60,7 +60,7 @@ class Task(models.Model):
 		ARCHIVED = "archived"
 
 	id = models.AutoField(primary_key=True)
-	name = models.CharField(max_length=40, null=False, default="My_Task")
+	name = models.CharField(max_length=50, null=False, default="My_Task")
 	project = models.ForeignKey("workspaces.Project", related_name="tasks", on_delete=models.CASCADE)
 	status = models.CharField(max_length=50, choices=StatusChoices.choices, null=False, default=StatusChoices.NOT_STARTED)
 	description = models.CharField(max_length=100, blank=True)
