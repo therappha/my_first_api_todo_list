@@ -24,8 +24,4 @@ class CustomTokenRefreshView(TokenRefreshView):
 @permission_classes([IsAuthenticated])
 def me(request):
 	user = request.user
-	return Response({
-		'username': user.username,
-		'name' : user.full_name,
-		'avatarUrl' : 'default_avatar'
-			})
+	return Response({ 'username': user.username,'name' : user.full_name,'avatarUrl' : 'default_avatar'}, 200)

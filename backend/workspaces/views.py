@@ -22,7 +22,7 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
 			return Workspace.objects.all()
 		return Workspace.objects.filter(memberships__user=user)
 
-		
+
 	def get_serializer_class(self):
 		if (self.action == 'retrieve'):
 			return WorkspaceDetailSerializer
@@ -32,39 +32,40 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
 	def perform_create(self, serializer):
 		newworkspace = serializer.save(owner = self.request.user)
 		WorkspaceMember.objects.create(workspace=newworkspace, user = self.request.user, role='owner')
-	
+
 	def	perform_destroy(self, instance):
 		return super().perform_destroy(instance) #raise PermissionDenied
 
 	def get_permissions(self):
-		if self.action in ['destroy','invite', 'change_role']:
+		if self.action in ['destroy','add_member', 'change_role']:
 			return [HasWorkspaceAuthority()]
 		elif self.action in ['update', 'partial_update', 'add_project']:
 			return [CanEditWorkspace()]
 		else:
 			return [IsAuthenticated()]
-		
+
 
 	@action(
-			detail=True, 
-		 	methods=['post'], 
-			url_path='invite')
+			detail=True,
+		 	methods=['post'],
+			url_path='invite',
+			permission_classes=[CanEditWorkspace])
 	def add_member(self, request, pk=None):
 		workspace = self.get_object()
 		username = request.data.get("username")
 		if not username:
-			return Response({"username is mandatory"}, status=400)
+			return Response({"detail": "username is mandatory"}, status=400)
 		user = User.objects.filter(username=username).first()
 		if not user:
-			return Response ({'user not found!'}, status=400)
+			return Response ({"detail": 'user not found!'}, status=400)
 		member, created = WorkspaceMember.objects.get_or_create(workspace=workspace, user=user)
 		if created:
 			member.role = "viewer"
 			member.save()
-			return Response({"member added with succcess"}, status=201)
+			return Response({"detail": "member added with succcess"}, status=201)
 		else:
-			return Response({"User already in workspace"}, status=400)
-		
+			return Response({"detail": "User already in workspace"}, status=400)
+
 	@action(
 		detail=True,
 		methods=['post'],
@@ -74,25 +75,25 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
 		workspace = self.get_object()
 		username = request.data.get("username")
 		if not username:
-			return Response({"username is mandatory"}, status=400)
+			return Response({"detail": "username is mandatory"}, status=400)
 		user = User.objects.filter(username=username).first()
 		if not user:
-			return Response({'user not found!'}, status=400)
+			return Response({"detail": 'user not found!'}, status=400)
 		has_authority = HasWorkspaceAuthority().has_object_permission(request, self, workspace)
 		if not (has_authority or user == request.user):
-			return Response({'Not allowed to delete this user.'}, status=403)
+			return Response({"detail": 'Not allowed to delete this user.'}, status=403)
 		member = WorkspaceMember.objects.filter(workspace=workspace, user=user).first()
 		if not member:
-			return Response({'User is not a member of this workspace.'}, status=404)
+			return Response({"detail": 'User is not a member of this workspace.'}, status=404)
 		if member.role == 'owner':
-			return Response({'Owner Cannot leave workspace, you need to promote another user or delete it'}, status=400)
+			return Response({"detail": 'Owner Cannot leave workspace, you need to promote another user or delete it'}, status=400)
 		member.delete()
-		return Response({'Member removed successfully.'}, status=200)
-	
+		return Response({"detail": 'Member removed successfully.'}, status=200)
+
 	@action(
-		detail=True, 
-		methods=['post'], 
-		url_path='add_project', 
+		detail=True,
+		methods=['post'],
+		url_path='add_project',
 		permission_classes=[CanEditWorkspace])
 	def add_project(self, request, pk=None):
 		workspace = self.get_object()
@@ -100,15 +101,15 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
 		description = request.data.get("description")
 		goal = request.data.get("goal")
 		if not (name and goal):
-			return Response({"Missing parameters"}, status=400)
-		project = Project.objects.create(workspace = workspace, 
-								   		name = name, 
-										goal = goal, 
+			return Response({"detail": "Missing parameters"}, status=400)
+		project = Project.objects.create(workspace = workspace,
+								   		name = name,
+										goal = goal,
 										description = description
 										)
 		if not project:
-			return Response({"Error while creating project"}, status=400)
-		return Response({"Project Created!"}, status=201)
+			return Response({"detail": "Error while creating project"}, status=400)
+		return Response({"detail": "Project Created!"}, status=201)
 
 
 	@action(
@@ -120,23 +121,23 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
 		username = request.data.get("username")
 		new_role = request.data.get("role")
 		if not username or not new_role:
-			return Response({"username and role are required."}, status=400)
+			return Response({"detail": "username and role are required."}, status=400)
 		user = User.objects.filter(username=username).first()
 		if not user:
-			return Response({'User not found.'}, status=404)
+			return Response({"detail": 'User not found.'}, status=404)
 		member = WorkspaceMember.objects.filter(workspace=workspace, user=user).first()
 		if not member:
-			return Response({'Member not found in this workspace.'}, status=404)
+			return Response({"detail": 'Member not found in this workspace.'}, status=404)
 		if new_role == 'owner' and  not (self.request.user.is_staff or self.request.user.is_superuser):
 			current_user = WorkspaceMember.objects.filter(user=self.request.user, workspace=workspace).first()
 			if current_user and current_user.role != "owner":
-				return Response({"Cannot promote to owner."}, status=403)
+				return Response({"detail": "Cannot promote to owner."}, status=403)
 			else:
 				current_user.role = 'admin'
 				current_user.save()
 		member.role = new_role
 		member.save()
-		return Response({'Role updated successfully.'}, status=200)
+		return Response({"detail": 'Role updated successfully.'}, status=200)
 
 class ProjectViewSet(viewsets.ModelViewSet):
 	serializer_class = ProjectSerializer
@@ -158,34 +159,30 @@ class ProjectViewSet(viewsets.ModelViewSet):
 			return ProjectSerializer
 
 	def get_permissions(self):
-		if self.action == 'destroy':
-			return [HasWorkspaceAuthority()]
-		elif self.action in ['update', 'partial_update', 'create', 'create_task']:
+
+		if self.action in ['destroy', 'update', 'partial_update', 'create', 'create_task']:
 			return [CanEditWorkspace()]
 		else:
 			return [IsAuthenticated()]
 	@action(
-		detail=True, 
-		methods=['post'], 
-		url_path='create_task', 
+		detail=True,
+		methods=['post'],
+		url_path='create_task',
 		permission_classes=[CanEditWorkspace])
 	def create_task(self, request, pk):
 		project = self.get_object()
 		name = request.data.get("name")
 		description = request.data.get("description")
-
+		if not description or description == "":
+			description = ""
 		if not name:
-			return Response({"task name is required."}, status=400)
-		task = Task.objects.create(name=name, project=project, status=Task.StatusChoices.NOT_STARTED)
+			return Response({"detail": "task name is required."}, status=400)
+		task = Task.objects.create(name=name, project=project, description=description, status=Task.StatusChoices.NOT_STARTED)
 		if (task):
-			return (Response({"Created task"}, status=201))
+			return (Response({"detail": "Created task"}, status=201))
 		else:
-			return Response({"Internal error"}, status=500)
+			return Response({"detail": "Internal error"}, status=500)
 
-		
-
-			
-	
 
 class TaskViewSet(viewsets.ModelViewSet):
 	serializer_class = TaskSerializer
@@ -203,11 +200,12 @@ class TaskViewSet(viewsets.ModelViewSet):
 
 		if user.is_superuser or user.is_staff:
 			return Task.objects.all()
-		
-	def create(self, request, *args, **kwargs):
-		return Response({"Use /projects/<project_id>/create_task/ instead."}, status=400)
-
 		return Task.objects.filter(project__workspace__memberships__user=user)
+
+	def create(self, request, *args, **kwargs):
+		return Response({"detail": "Use /projects/<project_id>/create_task/ instead."}, status=400)
+
+
 
 
 
