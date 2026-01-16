@@ -41,27 +41,29 @@ class ProjectSerializer(serializers.ModelSerializer):
 
 
 class ProjectDetailSerializer(serializers.ModelSerializer):
-	tasks = serializers.SerializerMethodField()
+	#tasks = serializers.SerializerMethodField() #Maybe use Nested Serializers?
+	tasks = TaskSerializer(many=True, read_only=True)
 	class Meta:
 		model = Project
 		fields = ['id', 'name', 'description', 'workspace', 'goal', 'tasks']
 
-	def get_tasks(self, obj):
-		tasks = Task.objects.filter(project = obj)
-		return TaskSerializer(tasks, many=True).data
+	# def get_tasks(self, obj):
+	# 	tasks = Task.objects.filter(project = obj)
+	# 	return TaskSerializer(tasks, many=True).data
 
 class WorkspaceDetailSerializer(serializers.ModelSerializer):
-	members = serializers.SerializerMethodField()
-	projects = serializers.SerializerMethodField()
-
+	#members = serializers.SerializerMethodField()
+	# projects = serializers.SerializerMethodField()
+	memberships = WorkspaceMemberSerializer(many=True, read_only=True) # Nested Serializers only work if the name of the field has the same related_name;
+	projects = ProjectSerializer(many=True, read_only=True)
 	class Meta:
 		model = Workspace
-		fields = ['id', 'name', 'description', 'created_at','members', 'projects']
+		fields = ['id', 'name', 'description', 'created_at','memberships', 'projects']
 
-	def get_members(self, obj):
-		workspace_members = WorkspaceMember.objects.filter(workspace = obj)
-		return WorkspaceMemberSerializer(workspace_members, many=True).data
+	# def get_members(self, obj):
+	# 	workspace_members = WorkspaceMember.objects.filter(workspace = obj)
+	# 	return WorkspaceMemberSerializer(workspace_members, many=True).data
 
-	def get_projects(self, obj):
-		project = Project.objects.filter(workspace = obj)
-		return ProjectSerializer(project, many=True).data
+	# def get_projects(self, obj):
+	# 	project = Project.objects.filter(workspace = obj)
+	# 	return ProjectSerializer(project, many=True).data
