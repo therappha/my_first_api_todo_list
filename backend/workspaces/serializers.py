@@ -54,18 +54,9 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
 
 class WorkspaceDetailSerializer(serializers.ModelSerializer):
 
-	#projects = ProjectSerializer(many=True, read_only=True)
-	#memberships = WorkspaceMemberSerializer(many=True, read_only=True) # Nested Serializers only work if the name of the field has the same related_name;
-	memberships = serializers.SerializerMethodField()
-	projects = serializers.SerializerMethodField()
+	projects = ProjectSerializer(many=True, read_only=True)
+	memberships = WorkspaceMemberSerializer(many=True, read_only=True) # Nested Serializers only work if the name of the field has the same related_name;
+
 	class Meta:
 		model = Workspace
 		fields = ['id', 'name', 'description', 'created_at','memberships', 'projects']
-
-	def get_memberships(self, obj):
-		workspace_members = WorkspaceMemberSerializer(obj.memberships, many=True)
-		return workspace_members.data
-
-	def get_projects(self, obj):
-		project = ProjectSerializer(obj.projects, many=True)
-		return project.data

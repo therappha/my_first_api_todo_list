@@ -7,14 +7,15 @@ export const useAuth = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const checkAuth = useCallback(async () => {
-    const tokens = localStorage.getItem('auth_tokens');
-    if (tokens) {
+    const accessToken = localStorage.getItem('access_token');
+    if (accessToken) {
       try {
         const userData = await api.getMe();
         setUser(userData);
         setIsAuthenticated(true);
       } catch {
-        localStorage.removeItem('auth_tokens');
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
         setIsAuthenticated(false);
         setUser(null);
       }
@@ -28,7 +29,8 @@ export const useAuth = () => {
 
   const login = async (username: string, password: string) => {
     const tokens = await api.login(username, password);
-    localStorage.setItem('auth_tokens', JSON.stringify(tokens));
+    localStorage.setItem('access_token', tokens.access);
+    localStorage.setItem('refresh_token', tokens.refresh);
     await checkAuth();
   };
 
@@ -37,7 +39,8 @@ export const useAuth = () => {
   };
 
   const logout = () => {
-    localStorage.removeItem('auth_tokens');
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
     setUser(null);
     setIsAuthenticated(false);
   };

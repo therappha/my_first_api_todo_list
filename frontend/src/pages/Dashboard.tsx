@@ -41,8 +41,9 @@ const Dashboard = () => {
       setWorkspaces(data.results);
       setHasNext(!!data.next);
       setHasPrev(!!data.previous);
-    } catch {
-      toast.error('Failed to load workspaces');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load workspaces';
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -56,8 +57,9 @@ const Dashboard = () => {
       setNewName('');
       setNewDesc('');
       fetchWorkspaces();
-    } catch {
-      toast.error('Failed to create workspace');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create workspace';
+      toast.error(errorMessage);
     }
   };
 

@@ -44,8 +44,9 @@ const WorkspaceView = () => {
     try {
       const data = await api.getWorkspace(Number(id));
       setWorkspace(data);
-    } catch {
-      toast.error('Failed to load workspace');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load workspace';
+      toast.error(errorMessage);
       navigate('/');
     } finally {
       setIsLoading(false);
@@ -61,8 +62,9 @@ const WorkspaceView = () => {
       setNewDesc('');
       setNewGoal('');
       fetchWorkspace();
-    } catch {
-      toast.error('Failed to create project');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create project';
+      toast.error(errorMessage);
     }
   };
 
@@ -72,8 +74,9 @@ const WorkspaceView = () => {
       await api.deleteWorkspace(Number(id));
       toast.success('Workspace deleted');
       navigate('/');
-    } catch {
-      toast.error('Failed to delete workspace');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete workspace';
+      toast.error(errorMessage);
     }
   };
 
@@ -88,8 +91,9 @@ const WorkspaceView = () => {
       setInviteOpen(false);
       setInviteUsername('');
       fetchWorkspace(); // Refresh to show new member
-    } catch {
-      toast.error('Failed to send invite');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to send invite';
+      toast.error(errorMessage);
     }
   };
 
@@ -101,8 +105,9 @@ const WorkspaceView = () => {
       toast.success('Member removed successfully');
       setMemberConfig(null);
       fetchWorkspace();
-    } catch {
-      toast.error('Failed to remove member');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to remove member';
+      toast.error(errorMessage);
     }
   };
 
@@ -113,8 +118,9 @@ const WorkspaceView = () => {
       toast.success('Role updated successfully');
       setMemberConfig(null);
       fetchWorkspace();
-    } catch {
-      toast.error('Failed to update role');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update role';
+      toast.error(errorMessage);
     }
   };
 
@@ -136,7 +142,7 @@ const WorkspaceView = () => {
     }
 
     // Find current user's role in this workspace
-    const currentUserMember = workspace.members.find(
+    const currentUserMember = workspace.memberships.find(
       m => m.user_name === currentUser.username
     );
 
@@ -181,7 +187,7 @@ const WorkspaceView = () => {
       <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/')}> 
+            <Button variant="ghost" size="sm" onClick={() => navigate('/')}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back
             </Button>
@@ -194,7 +200,7 @@ const WorkspaceView = () => {
           <span className="text-xs text-muted-foreground font-medium">
             {(() => {
               if (workspace && currentUser) {
-                const member = workspace.members.find(m => m.user_name === currentUser.username);
+                const member = workspace.memberships.find(m => m.user_name === currentUser.username);
                 return (member && member.full_name) || currentUser.name || currentUser.username;
               }
               return 'DJANGO TODOLIST';
@@ -210,7 +216,7 @@ const WorkspaceView = () => {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                 <Users className="h-4 w-4" />
-                Members ({workspace.members.length})
+                Members ({workspace.memberships.length})
               </div>
               <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
                 <DialogTrigger asChild>
@@ -236,7 +242,7 @@ const WorkspaceView = () => {
               </Dialog>
             </div>
           <ScrollArea className="mt-2 h-48">
-            {workspace.members.map((member) => {
+            {workspace.memberships.map((member) => {
               const displayName = member.full_name || member.user_name || `User ${member.id}`;
               const username = member.user_name || 'unknown';
               const initials = displayName.charAt(0).toUpperCase();

@@ -5,6 +5,20 @@ export interface AuthTokens {
   refresh: string;
 }
 
+export interface APIError {
+  detail?: string;
+  [key: string]: any;
+}
+
+export const extractErrorMessage = async (response: Response): Promise<string> => {
+  try {
+    const errorData: APIError = await response.json();
+    return errorData.detail || `Request failed with status ${response.status}`;
+  } catch {
+    return `Request failed with status ${response.status}`;
+  }
+};
+
 export interface User {
   username: string;
   name: string;
@@ -46,7 +60,7 @@ export interface WorkspaceDetail {
   name: string;
   description: string;
   created_at: string;
-  members: WorkspaceMember[];
+  memberships: WorkspaceMember[];
   projects: ProjectSummary[];
 }
 
@@ -56,17 +70,9 @@ export interface Task {
   description?: string;
   status: 'not_started' | 'in_progress' | 'in_review' | 'archived';
   project: number;
-  label?: {
-    label_name: string;
-    label_color: string;
-  };
 }
 
-export interface Label {
-  id: number;
-  label_name: string;
-  label_color: string;
-}
+
 
 export interface ProjectDetail {
   id: number;
@@ -85,11 +91,10 @@ export interface PaginatedResponse<T> {
 }
 
 const getAuthHeaders = (): HeadersInit => {
-  const tokens = localStorage.getItem('auth_tokens');
-  if (tokens) {
-    const { access } = JSON.parse(tokens) as AuthTokens;
+  const accessToken = localStorage.getItem('access_token');
+  if (accessToken) {
     return {
-      'Authorization': `Bearer ${access}`,
+      'Authorization': `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     };
   }
@@ -104,7 +109,10 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, full_name, password }),
     });
-    if (!res.ok) throw new Error('Registration failed');
+    if (!res.ok) {
+      const errorMessage = await extractErrorMessage(res);
+      throw new Error(errorMessage);
+    }
     return res;
   },
 
@@ -114,7 +122,10 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),
     });
-    if (!res.ok) throw new Error('Login failed');
+    if (!res.ok) {
+      const errorMessage = await extractErrorMessage(res);
+      throw new Error(errorMessage);
+    }
     return res.json();
   },
 
@@ -123,7 +134,10 @@ export const api = {
     const res = await fetch(`${API_BASE}/users/me/`, {
       headers: getAuthHeaders(),
     });
-    if (!res.ok) throw new Error('Failed to fetch user');
+    if (!res.ok) {
+      const errorMessage = await extractErrorMessage(res);
+      throw new Error(errorMessage);
+    }
     return res.json();
   },
 
@@ -133,7 +147,10 @@ export const api = {
       headers: getAuthHeaders(),
       body: JSON.stringify({ full_name }),
     });
-    if (!res.ok) throw new Error('Failed to update profile');
+    if (!res.ok) {
+      const errorMessage = await extractErrorMessage(res);
+      throw new Error(errorMessage);
+    }
     return res.json();
   },
 
@@ -141,7 +158,10 @@ export const api = {
     const res = await fetch(`${API_BASE}/users/${id}/`, {
       headers: getAuthHeaders(),
     });
-    if (!res.ok) throw new Error('Failed to fetch user');
+    if (!res.ok) {
+      const errorMessage = await extractErrorMessage(res);
+      throw new Error(errorMessage);
+    }
     return res.json();
   },
 
@@ -149,19 +169,22 @@ export const api = {
     const formData = new FormData();
     formData.append('avatar', file);
 
-    const tokens = localStorage.getItem('auth_tokens');
-    const headers: HeadersInit = {};
-    if (tokens) {
-      const { access } = JSON.parse(tokens) as AuthTokens;
-      headers['Authorization'] = `Bearer ${access}`;
-    }
+    const accessToken = localStorage.getItem('access_token');
+    const headers: HeadersInit = {
+      ...getAuthHeaders()
+    };
+    // Remove Content-Type para FormData (browser define automaticamente)
+    delete (headers as any)['Content-Type'];
 
     const res = await fetch(`${API_BASE}/users/me/avatar/`, {
       method: 'POST',
       headers,
       body: formData,
     });
-    if (!res.ok) throw new Error('Failed to upload avatar');
+    if (!res.ok) {
+      const errorMessage = await extractErrorMessage(res);
+      throw new Error(errorMessage);
+    }
     return res.json();
   },
 
@@ -170,7 +193,10 @@ export const api = {
     const res = await fetch(`${API_BASE}/workspaces/?page=${page}`, {
       headers: getAuthHeaders(),
     });
-    if (!res.ok) throw new Error('Failed to fetch workspaces');
+    if (!res.ok) {
+      const errorMessage = await extractErrorMessage(res);
+      throw new Error(errorMessage);
+    }
     return res.json();
   },
 
@@ -178,7 +204,10 @@ export const api = {
     const res = await fetch(`${API_BASE}/workspaces/${id}/`, {
       headers: getAuthHeaders(),
     });
-    if (!res.ok) throw new Error('Failed to fetch workspace');
+    if (!res.ok) {
+      const errorMessage = await extractErrorMessage(res);
+      throw new Error(errorMessage);
+    }
     return res.json();
   },
 
@@ -188,7 +217,10 @@ export const api = {
       headers: getAuthHeaders(),
       body: JSON.stringify({ name, description }),
     });
-    if (!res.ok) throw new Error('Failed to create workspace');
+    if (!res.ok) {
+      const errorMessage = await extractErrorMessage(res);
+      throw new Error(errorMessage);
+    }
     return res.json();
   },
 
@@ -198,7 +230,10 @@ export const api = {
       headers: getAuthHeaders(),
       body: JSON.stringify({ name, description }),
     });
-    if (!res.ok) throw new Error('Failed to update workspace');
+    if (!res.ok) {
+      const errorMessage = await extractErrorMessage(res);
+      throw new Error(errorMessage);
+    }
     return res.json();
   },
 
@@ -207,7 +242,10 @@ export const api = {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });
-    if (!res.ok) throw new Error('Failed to delete workspace');
+    if (!res.ok) {
+      const errorMessage = await extractErrorMessage(res);
+      throw new Error(errorMessage);
+    }
   },
 
   inviteToWorkspace: async (workspaceId: number, username: string): Promise<void> => {
@@ -216,7 +254,10 @@ export const api = {
       headers: getAuthHeaders(),
       body: JSON.stringify({ username }),
     });
-    if (!res.ok) throw new Error('Failed to send invite');
+    if (!res.ok) {
+      const errorMessage = await extractErrorMessage(res);
+      throw new Error(errorMessage);
+    }
   },
   kickMember: async (workspaceId: number, username: string): Promise<void> => {
     const res = await fetch(`${API_BASE}/workspaces/${workspaceId}/kick/`, {
@@ -224,7 +265,10 @@ export const api = {
       headers: getAuthHeaders(),
       body: JSON.stringify({ username }),
     });
-    if (!res.ok) throw new Error('Failed to kick member');
+    if (!res.ok) {
+      const errorMessage = await extractErrorMessage(res);
+      throw new Error(errorMessage);
+    }
   },
   changeMemberRole: async (workspaceId: number, username: string, role: string): Promise<void> => {
     const res = await fetch(`${API_BASE}/workspaces/${workspaceId}/change_role/`, {
@@ -232,14 +276,20 @@ export const api = {
       headers: getAuthHeaders(),
       body: JSON.stringify({ username, role }),
     });
-    if (!res.ok) throw new Error('Failed to change member role');
+    if (!res.ok) {
+      const errorMessage = await extractErrorMessage(res);
+      throw new Error(errorMessage);
+    }
   },
   // Projects
   getProjects: async (page = 1): Promise<PaginatedResponse<ProjectSummary>> => {
     const res = await fetch(`${API_BASE}/projects/?page=${page}`, {
       headers: getAuthHeaders(),
     });
-    if (!res.ok) throw new Error('Failed to fetch projects');
+    if (!res.ok) {
+      const errorMessage = await extractErrorMessage(res);
+      throw new Error(errorMessage);
+    }
     return res.json();
   },
 
@@ -247,7 +297,10 @@ export const api = {
     const res = await fetch(`${API_BASE}/projects/${id}/`, {
       headers: getAuthHeaders(),
     });
-    if (!res.ok) throw new Error('Failed to fetch project');
+    if (!res.ok) {
+      const errorMessage = await extractErrorMessage(res);
+      throw new Error(errorMessage);
+    }
     return res.json();
   },
 
@@ -257,7 +310,10 @@ export const api = {
       headers: getAuthHeaders(),
       body: JSON.stringify({ name, description, goal }),
     });
-    if (!res.ok) throw new Error('Failed to create project');
+    if (!res.ok) {
+      const errorMessage = await extractErrorMessage(res);
+      throw new Error(errorMessage);
+    }
     return res.json();
   },
 
@@ -267,7 +323,10 @@ export const api = {
       headers: getAuthHeaders(),
       body: JSON.stringify({ name, description, goal }),
     });
-    if (!res.ok) throw new Error('Failed to update project');
+    if (!res.ok) {
+      const errorMessage = await extractErrorMessage(res);
+      throw new Error(errorMessage);
+    }
     return res.json();
   },
 
@@ -276,7 +335,10 @@ export const api = {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });
-    if (!res.ok) throw new Error('Failed to delete project');
+    if (!res.ok) {
+      const errorMessage = await extractErrorMessage(res);
+      throw new Error(errorMessage);
+    }
   },
 
   createProjectTask: async (projectId: number, name: string, description?: string): Promise<Task> => {
@@ -285,7 +347,10 @@ export const api = {
       headers: getAuthHeaders(),
       body: JSON.stringify({ name, description }),
     });
-    if (!res.ok) throw new Error('Failed to create task');
+    if (!res.ok) {
+      const errorMessage = await extractErrorMessage(res);
+      throw new Error(errorMessage);
+    }
     return res.json();
   },
 
@@ -303,7 +368,10 @@ export const api = {
       headers: getAuthHeaders(),
       body: JSON.stringify(taskData),
     });
-    if (!res.ok) throw new Error('Failed to create task');
+    if (!res.ok) {
+      const errorMessage = await extractErrorMessage(res);
+      throw new Error(errorMessage);
+    }
     return res.json();
   },
 
@@ -313,7 +381,10 @@ export const api = {
       headers: getAuthHeaders(),
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error('Failed to update task');
+    if (!res.ok) {
+      const errorMessage = await extractErrorMessage(res);
+      throw new Error(errorMessage);
+    }
     return res.json();
   },
 
@@ -322,6 +393,9 @@ export const api = {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });
-    if (!res.ok) throw new Error('Failed to delete task');
+    if (!res.ok) {
+      const errorMessage = await extractErrorMessage(res);
+      throw new Error(errorMessage);
+    }
   },
 };

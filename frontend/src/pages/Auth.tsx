@@ -29,7 +29,8 @@ const Auth = () => {
         setIsLogin(true);
       }
     } catch (error) {
-      toast.error(isLogin ? 'Login failed' : 'Registration failed');
+      const errorMessage = error instanceof Error ? error.message : (isLogin ? 'Login failed' : 'Registration failed');
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

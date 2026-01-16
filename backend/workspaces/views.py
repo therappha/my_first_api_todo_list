@@ -5,9 +5,12 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from .models import Workspace, WorkspaceMember, Project, Task
-from users.models import User
+from django.contrib.auth import get_user_model
 from .serializers import WorkspaceSerializer, WorkspaceDetailSerializer, ProjectSerializer, ProjectDetailSerializer, TaskSerializer
 from .permissions import CanEditWorkspace, HasWorkspaceAuthority
+
+
+User = get_user_model
 
 class Pagination(PageNumberPagination):
 	page_size=10
@@ -20,7 +23,7 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
 		user = self.request.user
 		if user.is_superuser or user.is_staff:
 			return Workspace.objects.all().prefetch_related("memberships__user", "projects")
-		return Workspace.objects.filter(memberships__user=user).prefetch_related("memberships__user", "projects").distinct()
+		return Workspace.objects.filter(memberships__user=user).prefetch_related("memberships__user", "projects")
 		#Ja que vc ja vai buscar workspaces, busca tambem memberships e projects!
 
 
@@ -42,6 +45,8 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
 		else:
 			return [IsAuthenticated()]
 
+	def destroy(self, request, *args, **kwargs):
+		return super().destroy(request, *args, **kwargs)()
 
 	@action(
 			detail=True,

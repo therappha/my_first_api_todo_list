@@ -7,8 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Plus, Trash2, Archive, GripVertical } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -31,18 +29,9 @@ const ProjectView = () => {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [newTaskName, setNewTaskName] = useState('');
   const [newTaskDescription, setNewTaskDescription] = useState('');
-  const [newTaskLabel, setNewTaskLabel] = useState<number | ''>('');
   const [editTaskName, setEditTaskName] = useState('');
   const [editTaskDescription, setEditTaskDescription] = useState('');
-  const [editTaskLabel, setEditTaskLabel] = useState<number | ''>('');
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
-  const [availableLabels] = useState([
-    { id: 1, label_name: 'Bug', label_color: '#ef4444' },
-    { id: 2, label_name: 'Feature', label_color: '#3b82f6' },
-    { id: 3, label_name: 'Enhancement', label_color: '#10b981' },
-    { id: 4, label_name: 'Documentation', label_color: '#f59e0b' },
-    { id: 5, label_name: 'Testing', label_color: '#8b5cf6' },
-  ]); // Mock labels - replace with API call when available
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -61,8 +50,9 @@ const ProjectView = () => {
     try {
       const data = await api.getProject(Number(id));
       setProject(data);
-    } catch {
-      toast.error('Failed to load project');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load project';
+      toast.error(errorMessage);
       navigate('/');
     } finally {
       setIsLoading(false);
@@ -77,10 +67,10 @@ const ProjectView = () => {
       setCreateOpen(false);
       setNewTaskName('');
       setNewTaskDescription('');
-      setNewTaskLabel('');
       fetchProject();
-    } catch {
-      toast.error('Failed to create task');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create task';
+      toast.error(errorMessage);
     }
   };
 
@@ -92,22 +82,14 @@ const ProjectView = () => {
         description: editTaskDescription
       };
 
-      if (editTaskLabel) {
-        const selectedLabel = availableLabels.find(l => l.id === editTaskLabel);
-        if (selectedLabel) {
-          taskData.label_id = selectedLabel.id;
-        }
-      } else {
-        taskData.label_id = null; // Remove label if none selected
-      }
-
       await api.updateTask(editingTask.id, taskData);
       toast.success('Task updated');
       setEditOpen(false);
       setEditingTask(null);
       fetchProject();
-    } catch {
-      toast.error('Failed to update task');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update task';
+      toast.error(errorMessage);
     }
   };
 
@@ -116,8 +98,9 @@ const ProjectView = () => {
       await api.deleteTask(taskId);
       toast.success('Task deleted');
       fetchProject();
-    } catch {
-      toast.error('Failed to delete task');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete task';
+      toast.error(errorMessage);
     }
   };
 
@@ -126,8 +109,9 @@ const ProjectView = () => {
       await api.updateTask(taskId, { status: 'archived' });
       toast.success('Task archived');
       fetchProject();
-    } catch {
-      toast.error('Failed to archive task');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to archive task';
+      toast.error(errorMessage);
     }
   };
 
@@ -147,8 +131,9 @@ const ProjectView = () => {
     try {
       await api.updateTask(draggedTask.id, { status });
       fetchProject();
-    } catch {
-      toast.error('Failed to move task');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to move task';
+      toast.error(errorMessage);
     }
     setDraggedTask(null);
   };
@@ -157,13 +142,6 @@ const ProjectView = () => {
     setEditingTask(task);
     setEditTaskName(task.name);
     setEditTaskDescription(task.description || '');
-
-    // Find label ID if task has a label
-    const labelId = task.label
-      ? availableLabels.find(l => l.label_name === task.label!.label_name)?.id || ''
-      : '';
-    setEditTaskLabel(labelId);
-
     setEditOpen(true);
   };
 
@@ -172,9 +150,10 @@ const ProjectView = () => {
     try {
       await api.deleteProject(Number(id));
       toast.success('Project deleted');
-      navigate('/');
-    } catch {
-      toast.error('Failed to delete project');
+      navigate(`/workspace/${project?.workspace}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete project';
+      toast.error(errorMessage);
     }
   };
 
@@ -299,14 +278,6 @@ const ProjectView = () => {
                       <div className="flex-1 cursor-pointer" onClick={() => openEditDialog(task)}>
                         <div className="flex items-center gap-2">
                           <span>{task.name}</span>
-                          {task.label && (
-                            <Badge
-                              style={{ backgroundColor: task.label.label_color }}
-                              className="text-white text-xs"
-                            >
-                              {task.label.label_name}
-                            </Badge>
-                          )}
                         </div>
                         {task.description && (
                           <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
@@ -362,14 +333,6 @@ const ProjectView = () => {
                       <span className="text-sm font-medium text-muted-foreground line-through">
                         {task.name}
                       </span>
-                      {task.label && (
-                        <Badge
-                          style={{ backgroundColor: task.label.label_color }}
-                          className="text-white text-xs"
-                        >
-                          {task.label.label_name}
-                        </Badge>
-                      )}
                     </div>
                     {task.description && (
                       <p className="text-xs text-muted-foreground mt-1">
@@ -425,29 +388,6 @@ const ProjectView = () => {
                 onChange={(e) => setEditTaskDescription(e.target.value)}
                 rows={3}
               />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-2 block">Label</label>
-              <Select value={editTaskLabel ? editTaskLabel.toString() : 'none'} onValueChange={(value) => setEditTaskLabel(value === 'none' ? '' : Number(value))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a label (optional)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No label</SelectItem>
-                  {availableLabels.map((label) => (
-                    <SelectItem key={label.id} value={label.id.toString()}>
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: label.label_color }}
-                        />
-                        {label.label_name}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
 
             <div className="flex gap-2 pt-4">

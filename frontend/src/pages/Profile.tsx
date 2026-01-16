@@ -51,8 +51,9 @@ const Profile = () => {
       await api.uploadAvatar(file);
       toast.success('Avatar updated successfully');
       await refetch(); // Refresh user data
-    } catch {
-      toast.error('Failed to upload avatar');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload avatar';
+      toast.error(errorMessage);
     } finally {
       setUploading(false);
       // Reset file input
@@ -83,8 +84,9 @@ const Profile = () => {
       toast.success('Profile updated successfully');
       await refetch();
       setIsEditingName(false);
-    } catch {
-      toast.error('Failed to update profile');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update profile';
+      toast.error(errorMessage);
     } finally {
       setUpdating(false);
     }
