@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ArrowLeft, Plus, Trash2, Users, UserPlus, UserMinus } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Users, UserPlus, Settings2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const WorkspaceView = () => {
@@ -20,6 +20,8 @@ const WorkspaceView = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [memberConfig, setMemberConfig] = useState<null | { id: number, username: string, full_name: string, role: string }>(null);
+  const [newRole, setNewRole] = useState('');
   const [newName, setNewName] = useState('');
   const [newDesc, setNewDesc] = useState('');
   const [newGoal, setNewGoal] = useState('');
@@ -91,14 +93,28 @@ const WorkspaceView = () => {
     }
   };
 
+
   const handleKickMember = async (username: string) => {
     if (!confirm(`Remove ${username} from this workspace?`)) return;
     try {
       await api.kickMember(Number(id), username);
       toast.success('Member removed successfully');
-      fetchWorkspace(); // Refresh to update member list
+      setMemberConfig(null);
+      fetchWorkspace();
     } catch {
       toast.error('Failed to remove member');
+    }
+  };
+
+  const handleChangeRole = async () => {
+    if (!memberConfig || !newRole) return;
+    try {
+      await api.changeMemberRole(Number(id), memberConfig.username, newRole);
+      toast.success('Role updated successfully');
+      setMemberConfig(null);
+      fetchWorkspace();
+    } catch {
+      toast.error('Failed to update role');
     }
   };
 
@@ -165,7 +181,7 @@ const WorkspaceView = () => {
       <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/')}>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/')}> 
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back
             </Button>
@@ -174,7 +190,16 @@ const WorkspaceView = () => {
               <p className="text-sm text-muted-foreground">{workspace.description}</p>
             </div>
           </div>
-          <span className="text-xs text-muted-foreground font-medium">DJANGO TODOLIST</span>
+          {/* Always show current user's full name */}
+          <span className="text-xs text-muted-foreground font-medium">
+            {(() => {
+              if (workspace && currentUser) {
+                const member = workspace.members.find(m => m.user_name === currentUser.username);
+                return (member && member.full_name) || currentUser.name || currentUser.username;
+              }
+              return 'DJANGO TODOLIST';
+            })()}
+          </span>
         </div>
       </header>
 
@@ -212,11 +237,9 @@ const WorkspaceView = () => {
             </div>
           <ScrollArea className="mt-2 h-48">
             {workspace.members.map((member) => {
-              // Use full_name as display name and user_name as username handle
               const displayName = member.full_name || member.user_name || `User ${member.id}`;
               const username = member.user_name || 'unknown';
               const initials = displayName.charAt(0).toUpperCase();
-
               return (
                 <div key={member.id} className="flex items-center justify-between py-2">
                   <div className="flex items-center gap-2">
@@ -233,24 +256,56 @@ const WorkspaceView = () => {
                       </p>
                     </div>
                   </div>
-                  {/* Temporary: always show button for debugging */}
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      console.log('Kick button clicked for:', username);
-                      handleKickMember(username);
+                    onClick={() => {
+                      setMemberConfig({
+                        id: member.id,
+                        username: username,
+                        full_name: displayName,
+                        role: member.role
+                      });
+                      setNewRole(member.role);
                     }}
-                    className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                    title={`Kick ${username} (Debug mode)`}
+                    className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
+                    title={`Config ${username}`}
                   >
-                    <UserMinus className="h-4 w-4" />
+                    <Settings2 className="h-4 w-4" />
                   </Button>
-                  {/* Original condition: {canKickMember(member) && (...)} */}
                 </div>
               );
             })}
+
+            {/* Member Config Modal */}
+            {memberConfig && (
+              <Dialog open={!!memberConfig} onOpenChange={() => setMemberConfig(null)}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Member Config</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 pt-4">
+                    <div className="mb-2">
+                      <div className="font-medium">{memberConfig.full_name} (@{memberConfig.username})</div>
+                      <div className="text-xs text-muted-foreground mb-2">Current role: {memberConfig.role}</div>
+                      <label className="block mb-1 text-sm">Change role:</label>
+                      <select
+                        className="w-full border rounded px-2 py-1"
+                        value={newRole}
+                        onChange={e => setNewRole(e.target.value)}
+                      >
+                        <option value="owner">Owner</option>
+                        <option value="admin">Admin</option>
+                        <option value="editor">Editor</option>
+                        <option value="viewer">Viewer</option>
+                      </select>
+                    </div>
+                    <Button onClick={handleChangeRole} className="w-full">Change Role</Button>
+                    <Button variant="destructive" onClick={() => handleKickMember(memberConfig.username)} className="w-full">Kick</Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
           </ScrollArea>
         </div>
         <div className="mt-auto p-4">

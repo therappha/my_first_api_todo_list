@@ -72,18 +72,7 @@ const ProjectView = () => {
   const handleCreateTask = async () => {
     if (!newTaskName.trim()) return;
     try {
-      const taskData: any = {
-        description: newTaskDescription || undefined,
-      };
-
-      if (newTaskLabel) {
-        const selectedLabel = availableLabels.find(l => l.id === newTaskLabel);
-        if (selectedLabel) {
-          taskData.label_id = selectedLabel.id;
-        }
-      }
-
-      await api.createTask(Number(id), newTaskName, taskData);
+      await api.createProjectTask(Number(id), newTaskName, newTaskDescription || undefined);
       toast.success('Task created');
       setCreateOpen(false);
       setNewTaskName('');
@@ -248,7 +237,7 @@ const ProjectView = () => {
                     />
                   </div>
 
-                  <div>
+                  {/* <div>
                     <label className="text-sm font-medium mb-2 block">Label</label>
                     <Select value={newTaskLabel ? newTaskLabel.toString() : 'none'} onValueChange={(value) => setNewTaskLabel(value === 'none' ? '' : Number(value))}>
                       <SelectTrigger>
@@ -269,7 +258,7 @@ const ProjectView = () => {
                         ))}
                       </SelectContent>
                     </Select>
-                  </div>
+                  </div> */}
 
                   <Button onClick={handleCreateTask} className="w-full">Create</Button>
                 </div>

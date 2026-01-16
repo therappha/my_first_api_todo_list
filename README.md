@@ -6,6 +6,28 @@ Simple todo-list endpoints using DJANGO REST FRAMEWORK
 ## ENDPOINTS
 
 
+
+1. POST /register/ - Register new user
+2. POST /login/ - Login user
+3. POST /verify/ - Verify token
+4. POST /refresh/ - Refresh access token
+5. GET /users/me/ - Get current user profile
+6. GET /workspaces/ - List all workspaces the current user have access
+7. GET /workspaces/<workspace_id>/ - Retrieve workspace details
+8. GET /projects/ - List all projects the current user have access
+9. GET /projects/<project_id>/ - Retrieve project details
+10. POST /workspaces/<workspace_id>/invite/ - Add member to workspace
+11. POST /workspaces/<workspace_id>/kick/ - Remove member from workspace
+12. PATCH /workspaces/<workspace_id>/change_role/ - Change member role
+13. POST /workspaces/<workspace_id>/add_project/ - Create project
+14. POST /projects/<project_id>/create_task/ - Create task
+15. PATCH /tasks/<task_id>/ - Update task
+16. DELETE /tasks/<task_id>/ - Delete task
+17. DELETE /projects/<project_id>/ - Delete project
+
+
+
+
 POST /register/
 ```
 	headers:
@@ -212,3 +234,4 @@ returns 200 success with project details and tasks if user has access or admin
 	]
 	}
 ```
+

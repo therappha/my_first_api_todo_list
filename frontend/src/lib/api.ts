@@ -226,6 +226,14 @@ export const api = {
     });
     if (!res.ok) throw new Error('Failed to kick member');
   },
+  changeMemberRole: async (workspaceId: number, username: string, role: string): Promise<void> => {
+    const res = await fetch(`${API_BASE}/workspaces/${workspaceId}/change_role/`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ username, role }),
+    });
+    if (!res.ok) throw new Error('Failed to change member role');
+  },
   // Projects
   getProjects: async (page = 1): Promise<PaginatedResponse<ProjectSummary>> => {
     const res = await fetch(`${API_BASE}/projects/?page=${page}`, {
@@ -244,10 +252,10 @@ export const api = {
   },
 
   createProject: async (workspace: number, name: string, description: string, goal: string): Promise<ProjectSummary> => {
-    const res = await fetch(`${API_BASE}/projects/`, {
+    const res = await fetch(`${API_BASE}/workspaces/${workspace}/add_project/`, {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ workspace, name, description, goal }),
+      body: JSON.stringify({ name, description, goal }),
     });
     if (!res.ok) throw new Error('Failed to create project');
     return res.json();
@@ -269,6 +277,16 @@ export const api = {
       headers: getAuthHeaders(),
     });
     if (!res.ok) throw new Error('Failed to delete project');
+  },
+
+  createProjectTask: async (projectId: number, name: string, description?: string): Promise<Task> => {
+    const res = await fetch(`${API_BASE}/projects/${projectId}/create_task/`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ name, description }),
+    });
+    if (!res.ok) throw new Error('Failed to create task');
+    return res.json();
   },
 
   // Tasks

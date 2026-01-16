@@ -32,6 +32,9 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
 	def perform_create(self, serializer):
 		newworkspace = serializer.save(owner = self.request.user)
 		WorkspaceMember.objects.create(workspace=newworkspace, user = self.request.user, role='owner')
+	
+	def	perform_destroy(self, instance):
+		return super().perform_destroy(instance) #raise PermissionDenied
 
 	def get_permissions(self):
 		if self.action in ['destroy','invite', 'change_role']:
@@ -124,7 +127,7 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
 		member = WorkspaceMember.objects.filter(workspace=workspace, user=user).first()
 		if not member:
 			return Response({'Member not found in this workspace.'}, status=404)
-		if new_role == 'owner':
+		if new_role == 'owner' and  not (self.request.user.is_staff or self.request.user.is_superuser):
 			current_user = WorkspaceMember.objects.filter(user=self.request.user, workspace=workspace).first()
 			if current_user and current_user.role != "owner":
 				return Response({"Cannot promote to owner."}, status=403)
@@ -190,7 +193,7 @@ class TaskViewSet(viewsets.ModelViewSet):
 	pagination_class = Pagination
 
 	def get_permissions(self):
-		if self.action in ['update', 'partial_update', 'create', 'destroy']:
+		if self.action in ['update', 'partial_update', 'destroy']:
 			return [CanEditWorkspace()]
 		else:
 			return [IsAuthenticated()]
@@ -200,6 +203,9 @@ class TaskViewSet(viewsets.ModelViewSet):
 
 		if user.is_superuser or user.is_staff:
 			return Task.objects.all()
+		
+	def create(self, request, *args, **kwargs):
+		return Response({"Use /projects/<project_id>/create_task/ instead."}, status=400)
 
 		return Task.objects.filter(project__workspace__memberships__user=user)
 
