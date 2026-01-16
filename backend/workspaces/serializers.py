@@ -11,10 +11,11 @@ class WorkspaceSerializer(serializers.ModelSerializer):
 		fields = ['id', 'name', 'description', 'member_count', 'project_count']
 
 	def get_member_count(self, obj):
-		return (WorkspaceMember.objects.filter(workspace = obj).count())
+		#return (WorkspaceMember.objects.filter(workspace = obj).count())
+		return obj.memberships.count()
 
 	def get_project_count(self, obj):
-		return (Project.objects.filter(workspace = obj).count())
+		return obj.projects.count()
 
 class WorkspaceMemberSerializer(serializers.ModelSerializer):
 	user_name = serializers.SerializerMethodField()
@@ -52,18 +53,19 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
 	# 	return TaskSerializer(tasks, many=True).data
 
 class WorkspaceDetailSerializer(serializers.ModelSerializer):
-	#members = serializers.SerializerMethodField()
-	# projects = serializers.SerializerMethodField()
-	memberships = WorkspaceMemberSerializer(many=True, read_only=True) # Nested Serializers only work if the name of the field has the same related_name;
-	projects = ProjectSerializer(many=True, read_only=True)
+
+	#projects = ProjectSerializer(many=True, read_only=True)
+	#memberships = WorkspaceMemberSerializer(many=True, read_only=True) # Nested Serializers only work if the name of the field has the same related_name;
+	memberships = serializers.SerializerMethodField()
+	projects = serializers.SerializerMethodField()
 	class Meta:
 		model = Workspace
 		fields = ['id', 'name', 'description', 'created_at','memberships', 'projects']
 
-	# def get_members(self, obj):
-	# 	workspace_members = WorkspaceMember.objects.filter(workspace = obj)
-	# 	return WorkspaceMemberSerializer(workspace_members, many=True).data
+	def get_memberships(self, obj):
+		workspace_members = WorkspaceMemberSerializer(obj.memberships, many=True)
+		return workspace_members.data
 
-	# def get_projects(self, obj):
-	# 	project = Project.objects.filter(workspace = obj)
-	# 	return ProjectSerializer(project, many=True).data
+	def get_projects(self, obj):
+		project = ProjectSerializer(obj.projects, many=True)
+		return project.data

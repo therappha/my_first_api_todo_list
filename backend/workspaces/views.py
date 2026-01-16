@@ -19,8 +19,9 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
 	def get_queryset(self):
 		user = self.request.user
 		if user.is_superuser or user.is_staff:
-			return Workspace.objects.all()
-		return Workspace.objects.filter(memberships__user=user)
+			return Workspace.objects.all().prefetch_related("memberships__user", "projects")
+		return Workspace.objects.filter(memberships__user=user).prefetch_related("memberships__user", "projects").distinct()
+		#Ja que vc ja vai buscar workspaces, busca tambem memberships e projects!
 
 
 	def get_serializer_class(self):
@@ -32,9 +33,6 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
 	def perform_create(self, serializer):
 		newworkspace = serializer.save(owner = self.request.user)
 		WorkspaceMember.objects.create(workspace=newworkspace, user = self.request.user, role='owner')
-
-	def	perform_destroy(self, instance):
-		return super().perform_destroy(instance) #raise PermissionDenied
 
 	def get_permissions(self):
 		if self.action in ['destroy','add_member', 'change_role']:
