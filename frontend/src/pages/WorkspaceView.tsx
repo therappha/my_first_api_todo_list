@@ -235,7 +235,7 @@ const WorkspaceView = () => {
                       onChange={(e) => setInviteUsername(e.target.value)}
                     />
                     <Button onClick={handleInviteUser} className="w-full">
-                      Send Invite
+                      Add Member
                     </Button>
                   </div>
                 </DialogContent>
