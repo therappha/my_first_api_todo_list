@@ -44,7 +44,7 @@ class Project(models.Model):
 	name = models.CharField(max_length=30, null=False, default="My_Project")
 	workspace = models.ForeignKey("workspaces.Workspace", on_delete=models.CASCADE, related_name="projects")
 	description = models.CharField(max_length=50, blank=True )
-	goal = models.CharField(max_length=300, null=False, default="add project goal here")
+	goal = models.CharField(max_length=300, null=False, default="add project goal here", blank=True)
 
 	def __str__(self):
 		return f"{self.name} ({self.workspace.name})"

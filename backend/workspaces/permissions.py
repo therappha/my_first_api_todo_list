@@ -2,6 +2,11 @@ from rest_framework import permissions
 from .models import WorkspaceMember
 
 class CanEditWorkspace(permissions.BasePermission):
+	def has_permission(self, request, view):
+		if not request.user or not request.user.is_authenticated:
+			return False
+		else:
+			return True
 	def has_object_permission(self, request, view, obj):
 		if hasattr(obj, 'memberships'):
 			workspace = obj
@@ -19,6 +24,11 @@ class CanEditWorkspace(permissions.BasePermission):
 		return membership and membership.role in ['owner', 'admin', 'editor']
 
 class HasWorkspaceAuthority(permissions.BasePermission):
+	def has_permission(self, request, view):
+		if not request.user or not request.user.is_authenticated:
+			return False
+		else:
+			return True
 	def has_object_permission(self, request, view, obj):
 		if hasattr(obj, 'memberships'):
 			workspace = obj

@@ -8,6 +8,7 @@ from .models import Workspace, WorkspaceMember, Project, Task
 from django.contrib.auth import get_user_model
 from .serializers import WorkspaceSerializer, WorkspaceDetailSerializer, ProjectSerializer, ProjectDetailSerializer, TaskSerializer
 from .permissions import CanEditWorkspace, HasWorkspaceAuthority
+from rest_framework.exceptions import ValidationError, PermissionDenied, NotFound
 
 
 User = get_user_model()
@@ -47,25 +48,25 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
 
 
 	@action(
-			detail=True,
-		 	methods=['post'],
-			url_path='invite',
-			permission_classes=[CanEditWorkspace])
+		detail=True,
+		methods=['post'],
+		url_path='invite',
+		permission_classes=[CanEditWorkspace])
 	def add_member(self, request, pk=None):
 		workspace = self.get_object()
 		username = request.data.get("username")
 		if not username:
-			return Response({"detail": "username is mandatory"}, status=400)
+			raise ValidationError({"detail": "username is mandatory"})
 		user = User.objects.filter(username=username).first()
 		if not user:
-			return Response ({"detail": 'user not found!'}, status=400)
+			raise NotFound({"detail": "user not found"})
 		member, created = WorkspaceMember.objects.get_or_create(workspace=workspace, user=user)
 		if created:
 			member.role = "viewer"
 			member.save()
 			return Response({"detail": "member added with succcess"}, status=201)
 		else:
-			return Response({"detail": "User already in workspace"}, status=400)
+			raise ValidationError({"detail": "User already in workspace"})
 
 	@action(
 		detail=True,
@@ -76,18 +77,18 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
 		workspace = self.get_object()
 		username = request.data.get("username")
 		if not username:
-			return Response({"detail": "username is mandatory"}, status=400)
+			raise ValidationError({"detail": "username is mandatory"})
 		user = User.objects.filter(username=username).first()
 		if not user:
-			return Response({"detail": 'user not found!'}, status=400)
+			raise NotFound({"detail": "user not found!"})
 		has_authority = HasWorkspaceAuthority().has_object_permission(request, self, workspace)
 		if not (has_authority or user == request.user):
-			return Response({"detail": 'Not allowed to delete this user.'}, status=403)
+			raise PermissionDenied({"detail": "Not allowed to delete this user."})
 		member = WorkspaceMember.objects.filter(workspace=workspace, user=user).first()
 		if not member:
-			return Response({"detail": 'User is not a member of this workspace.'}, status=404)
+			raise NotFound({"detail": "User is not a member of this workspace."})
 		if member.role == 'owner':
-			return Response({"detail": 'Owner Cannot leave workspace, you need to promote another user or delete it'}, status=400)
+			raise PermissionDenied({"detail": "Owner Cannot leave workspace, you need to promote another user or delete it"})
 		member.delete()
 		return Response({"detail": 'Member removed successfully.'}, status=200)
 
@@ -98,44 +99,38 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
 		permission_classes=[CanEditWorkspace])
 	def add_project(self, request, pk=None):
 		workspace = self.get_object()
-		name = request.data.get("name")
-		description = request.data.get("description")
-		goal = request.data.get("goal")
-		if not (name and goal):
-			return Response({"detail": "Missing parameters"}, status=400)
-		project = Project.objects.create(workspace = workspace,
-								   		name = name,
-										goal = goal,
-										description = description
-										)
-		if not project:
-			return Response({"detail": "Error while creating project"}, status=400)
+		project = ProjectSerializer(data = request.data) # WHY data= request.data? ??
+		try:
+			project.is_valid(raise_exception=True)
+		except:
+			raise ValidationError({"detail": "Invalid Parameters"})
+		project.save(workspace=workspace)
 		return Response({"detail": "Project Created!"}, status=201)
 
 
 	@action(
-    detail=True,
-    methods=['patch'],
-    url_path='change_role')
+		detail=True,
+		methods=['patch'],
+		url_path='change_role')
 	def change_role(self, request, pk=None):
 		workspace = self.get_object()
 		username = request.data.get("username")
 		new_role = request.data.get("role")
 		if not username or not new_role:
-			return Response({"detail": "username and role are required."}, status=400)
+			raise ValidationError({"detail": "username and role are required."})
 		user = User.objects.filter(username=username).first()
 		if not user:
-			return Response({"detail": 'User not found.'}, status=404)
+			raise NotFound({"detail": "User not found."})
 		member = WorkspaceMember.objects.filter(workspace=workspace, user=user).first()
 		if not member:
-			return Response({"detail": 'Member not found in this workspace.'}, status=404)
+			raise NotFound({"detail": "Member not found in this workspace."})
 		current_user = WorkspaceMember.objects.filter(user=self.request.user, workspace=workspace).first()
 
 		if new_role == 'owner' or member.role == 'owner':
-			if current_user and new_role == 'owner' and (current_user.role != "owner" and  not (self.request.user.is_staff or self.request.user.is_superuser)):
-				return Response({"detail": "Cannot promote to owner."}, status=403)
+			if current_user and new_role == 'owner' and (current_user.role != "owner" and not (self.request.user.is_staff or self.request.user.is_superuser)):
+				raise PermissionDenied({"detail": "Cannot promote to owner."})
 			if not (self.request.user.is_staff or self.request.user.is_superuser or current_user.role == "owner"):
-				return Response({"detail": "Cannot demote owner."}, status=403)
+				raise PermissionDenied({"detail": "Cannot demote owner."})
 			elif not (self.request.user.is_staff or self.request.user.is_superuser):
 				current_user.role = 'admin'
 				current_user.save()
@@ -177,15 +172,15 @@ class ProjectViewSet(viewsets.ModelViewSet):
 		project = self.get_object()
 		name = request.data.get("name")
 		description = request.data.get("description")
-		if not description or description == "":
-			description = ""
 		if not name:
-			return Response({"detail": "task name is required."}, status=400)
+			raise ValidationError({"detail": "task name is required."})
+		if not description:
+			description = ""
 		task = Task.objects.create(name=name, project=project, description=description, status=Task.StatusChoices.NOT_STARTED)
-		if (task):
-			return (Response({"detail": "Created task"}, status=201))
+		if task:
+			return Response({"detail": "Created task"}, status=201)
 		else:
-			return Response({"detail": "Internal error"}, status=500)
+			raise ValidationError({"detail": "Internal error"})
 
 
 class TaskViewSet(viewsets.ModelViewSet):
