@@ -24,6 +24,16 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 		token = super().get_token(user)
 		token['username'] = user.username
 		return token
+#	return Response({ 'username': user.username,'name' : user.full_name,'avatarUrl' : 'default_avatar'}, 200)
+
+class MeSerializer(serializers.Serializer):
+	username = serializers.CharField()
+	name = serializers.CharField(source='full_name')
+	avatarUrl = serializers.SerializerMethodField
+
+	def get_avatarUrl(self, obj):
+		# Retorna avatar url enquanto nao existe no usermodel ainda
+		return "default_avatar"
 
 
 class CustomTokenRefreshViewSerializer(TokenRefreshSerializer):
