@@ -8,9 +8,7 @@ from .models import Workspace, WorkspaceMember, Project, Task
 from django.contrib.auth import get_user_model
 from .serializers import WorkspaceSerializer, WorkspaceDetailSerializer, ProjectSerializer, ProjectDetailSerializer, TaskSerializer
 from .permissions import CanEditWorkspace, HasWorkspaceAuthority
-
-
-User = get_user_model
+from users.models import User
 
 class Pagination(PageNumberPagination):
 	page_size=10
@@ -45,8 +43,6 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
 		else:
 			return [IsAuthenticated()]
 
-	def destroy(self, request, *args, **kwargs):
-		return super().destroy(request, *args, **kwargs)()
 
 	@action(
 			detail=True,
@@ -131,11 +127,14 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
 		member = WorkspaceMember.objects.filter(workspace=workspace, user=user).first()
 		if not member:
 			return Response({"detail": 'Member not found in this workspace.'}, status=404)
-		if new_role == 'owner' and  not (self.request.user.is_staff or self.request.user.is_superuser):
-			current_user = WorkspaceMember.objects.filter(user=self.request.user, workspace=workspace).first()
-			if current_user and current_user.role != "owner":
+		current_user = WorkspaceMember.objects.filter(user=self.request.user, workspace=workspace).first()
+
+		if new_role == 'owner' or member.role == 'owner':
+			if current_user and new_role == 'owner' and (current_user.role != "owner" and  not (self.request.user.is_staff or self.request.user.is_superuser)):
 				return Response({"detail": "Cannot promote to owner."}, status=403)
-			else:
+			if not (self.request.user.is_staff or self.request.user.is_superuser or current_user.role == "owner"):
+				return Response({"detail": "Cannot demote owner."}, status=403)
+			elif not (self.request.user.is_staff or self.request.user.is_superuser):
 				current_user.role = 'admin'
 				current_user.save()
 		member.role = new_role
