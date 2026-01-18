@@ -134,7 +134,6 @@ returns 200 success with list of workspaces user is member of or all workspaces 
 
 
 GET /workspaces/<workspace_id>/
-```
 need: authentication
 ```
 	headers:
@@ -373,9 +372,7 @@ need: authentication, editor or higher role in project workspace
 	}
 ```
 returns 200 success with updated task details or 403 if no permission or 404 if task not found
-```
 DELETE /tasks/<task_id>/
-```
 need: authentication, editor or higher role in project workspace
 ```
 	headers:
