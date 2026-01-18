@@ -372,6 +372,8 @@ need: authentication, editor or higher role in project workspace
 	}
 ```
 returns 200 success with updated task details or 403 if no permission or 404 if task not found
+
+
 DELETE /tasks/<task_id>/
 need: authentication, editor or higher role in project workspace
 ```
