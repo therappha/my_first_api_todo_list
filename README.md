@@ -68,8 +68,7 @@ A superuser can view and override all permissions in the system, regardless of w
 1. POST /register/ - Register new user
 2. POST /login/ - Login user
 3. POST /verify/ - Verify token
-4. POST /refresh/ - Refresh access token
-
+4. POST /refresh/ - Refresh access token // currently not working xd
 5. GET /users/me/ - Get current user profile
 6. GET /workspaces/ - List all workspaces the current user have access
 7. GET /workspaces/<workspace_id>/ - Retrieve workspace details if user have access
