@@ -2,6 +2,8 @@
 
 This project is a simple todo list API built with Django. The main objective is to learn Django and web API development. This is my first API project.
 
+
+
 ## Features
 
 - Each user can only view their own workspaces and workspaces where they are a member.
@@ -10,6 +12,12 @@ This project is a simple todo list API built with Django. The main objective is 
   - **Editor**: Can edit projects and tasks in the workspace.
   - **Admin**: Can manage the workspace (add/remove members, change roles, etc).
   - **Owner**: Has all permissions, including deleting the workspace and promoting/demoting other members.
+
+## Requirements
+
+- Python 3.12+
+- npm
+- linux env if using the setup and start scripts
 
 ## Setup
 
@@ -24,8 +32,19 @@ sudo lsof -i :8080 -t | xargs -r kill -9
 
 **Warning:** This will kill any process using these ports. Use at your own risk.
 
+
+## Disclaimer
+
+This setup and start script was made with ubuntu in mind, if you are in another environment please search how to run django and npm run dev"
+I will containerize this project soon so it can run in all environments, but it's not my priority right now!
+
 ### 2. Install dependencies and setup
 
+Install npm if u do not have
+```
+sudo apt update
+sudo apt install npm
+```
 Run the setup script:
 
 ```sh
