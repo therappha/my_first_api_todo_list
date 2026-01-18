@@ -1,6 +1,64 @@
-# OBJECTIVE: CREATE A TODO-LIST APPLICATION WITH THE KNOWLEDGE YOU GAINED IN THE TWO WEEKS OF ONBOARDING.
+# Django Todo List API
 
-Simple todo-list endpoints using DJANGO REST FRAMEWORK
+This project is a simple todo list API built with Django. The main objective is to learn Django and web API development. This is my first API project.
+
+## Features
+
+- Each user can only view their own workspaces and workspaces where they are a member.
+- Each workspace has different permission levels:
+  - **Viewer**: Can only see the workspace, projects, and tasks.
+  - **Editor**: Can edit projects and tasks in the workspace.
+  - **Admin**: Can manage the workspace (add/remove members, change roles, etc).
+  - **Owner**: Has all permissions, including deleting the workspace and promoting/demoting other members.
+
+## Setup
+
+### 1. Check for open ports
+
+This project uses ports 8000 (backend) and 8080 (frontend) by default. Make sure these ports are not in use. To check and free these ports, you can use:
+
+```sh
+sudo lsof -i :8000 -t | xargs -r kill -9
+sudo lsof -i :8080 -t | xargs -r kill -9
+```
+
+**Warning:** This will kill any process using these ports. Use at your own risk.
+
+### 2. Install dependencies and setup
+
+Run the setup script:
+
+```sh
+./setup.sh
+```
+
+### 3. Start the project
+
+Start the backend and frontend with:
+
+```sh
+./start.sh
+```
+
+The backend will be available at http://localhost:8000 and the frontend at http://localhost:8080 (if configured).
+
+## Usage
+
+- Register a user and login to get your authentication token.
+- Create or join a workspace.
+- Manage projects and tasks according to your role in each workspace.
+
+See the README.md for API endpoints and example requests/responses.
+
+## Superuser and Admin
+
+You can create a Django superuser (admin) with:
+
+```sh
+./manage.py createsuperuser
+```
+
+A superuser can view and override all permissions in the system, regardless of workspace membership or role.
 
 
 ## ENDPOINTS
