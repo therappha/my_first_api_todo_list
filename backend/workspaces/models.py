@@ -31,7 +31,6 @@ class WorkspaceMember(models.Model):
 		unique_together = [('workspace', 'user')]
 
 class Workspace(models.Model):
-	id = models.AutoField(primary_key=True)
 	name = models.CharField(max_length=100, null=False, default="My Workspace")
 	description = models.CharField(max_length=300, blank=True )
 	#labels= models.ManyToManyField(Label, related_name="labels")
@@ -42,7 +41,6 @@ class Workspace(models.Model):
 		return self.name
 
 class Project(models.Model):
-	id = models.AutoField(primary_key=True)
 	name = models.CharField(max_length=30, null=False, default="My_Project")
 	workspace = models.ForeignKey("workspaces.Workspace", on_delete=models.CASCADE, related_name="projects")
 	description = models.CharField(max_length=50, blank=True )
@@ -59,7 +57,6 @@ class Task(models.Model):
 		IN_REVIEW = "in_review"
 		ARCHIVED = "archived"
 
-	id = models.AutoField(primary_key=True)
 	name = models.CharField(max_length=50, null=False, default="My_Task")
 	project = models.ForeignKey("workspaces.Project", related_name="tasks", on_delete=models.CASCADE)
 	status = models.CharField(max_length=50, choices=StatusChoices.choices, null=False, default=StatusChoices.NOT_STARTED)
