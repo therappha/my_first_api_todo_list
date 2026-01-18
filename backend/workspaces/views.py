@@ -6,7 +6,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from .models import Workspace, WorkspaceMember, Project, Task
 from django.contrib.auth import get_user_model
-from .serializers import WorkspaceSerializer, WorkspaceDetailSerializer, ProjectSerializer, ProjectDetailSerializer, TaskSerializer
+from .serializers import WorkspaceSerializer, WorkspaceDetailSerializer, ProjectSerializer, ProjectDetailSerializer, TaskSerializer, ChangeRoleSerializer, KickMemberSerializer
+from .serializers import AddMemberSerializer
 from .permissions import CanEditWorkspace, HasWorkspaceAuthority
 from rest_framework.exceptions import ValidationError, PermissionDenied, NotFound
 
@@ -53,10 +54,10 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
 		url_path='invite',
 		permission_classes=[CanEditWorkspace])
 	def add_member(self, request, pk=None):
+		serializer = AddMemberSerializer(data=request.data)
+		serializer.is_valid(raise_exception=True)
+		username = serializer.validated_data['username']
 		workspace = self.get_object()
-		username = request.data.get("username")
-		if not username:
-			raise ValidationError({"detail": "username is mandatory"})
 		user = User.objects.filter(username=username).first()
 		if not user:
 			raise NotFound({"detail": "user not found"})
@@ -74,10 +75,10 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
 		url_path='kick',
 	)
 	def kick_member(self, request, pk=None):
+		serializer = KickMemberSerializer(data=request.data)
+		serializer.is_valid(raise_exception=True)
+		username = serializer.validated_data['username']
 		workspace = self.get_object()
-		username = request.data.get("username")
-		if not username:
-			raise ValidationError({"detail": "username is mandatory"})
 		user = User.objects.filter(username=username).first()
 		if not user:
 			raise NotFound({"detail": "user not found!"})
@@ -113,11 +114,11 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
 		methods=['patch'],
 		url_path='change_role')
 	def change_role(self, request, pk=None):
+		serializer = ChangeRoleSerializer(data=request.data)
+		serializer.is_valid(raise_exception=True)
+		username = serializer.validated_data['username']
+		new_role = serializer.validated_data['role']
 		workspace = self.get_object()
-		username = request.data.get("username")
-		new_role = request.data.get("role")
-		if not username or not new_role:
-			raise ValidationError({"detail": "username and role are required."})
 		user = User.objects.filter(username=username).first()
 		if not user:
 			raise NotFound({"detail": "User not found."})

@@ -1,4 +1,4 @@
-
+from rest_framework import serializers
 from rest_framework import serializers
 from .models import Workspace, WorkspaceMember, Project, Task
 from rest_framework.decorators import action
@@ -60,3 +60,14 @@ class WorkspaceDetailSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Workspace
 		fields = ['id', 'name', 'description', 'created_at','memberships', 'projects']
+
+
+class AddMemberSerializer(serializers.Serializer):
+	username = serializers.CharField()
+
+class ChangeRoleSerializer(serializers.Serializer):
+	username = serializers.CharField()
+	role = serializers.ChoiceField(choices=['owner', 'admin', 'editor', 'viewer'])
+
+class KickMemberSerializer(serializers.Serializer):
+	username = serializers.CharField()
