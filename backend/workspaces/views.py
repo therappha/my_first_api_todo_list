@@ -8,7 +8,9 @@ from .models import Workspace, WorkspaceMember, Project, Task
 from django.contrib.auth import get_user_model
 from .serializers import WorkspaceSerializer, WorkspaceDetailSerializer, ProjectSerializer, ProjectDetailSerializer, TaskSerializer
 from .permissions import CanEditWorkspace, HasWorkspaceAuthority
-from users.models import User
+
+
+User = get_user_model()
 
 class Pagination(PageNumberPagination):
 	page_size=10
