@@ -130,7 +130,7 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
 		if new_role == 'owner' or member.role == 'owner':
 			if current_user and new_role == 'owner' and (current_user.role != "owner" and not (self.request.user.is_staff or self.request.user.is_superuser)):
 				raise PermissionDenied({"detail": "Cannot promote to owner."})
-			if not (self.request.user.is_staff or self.request.user.is_superuser or current_user.role == "owner"):
+			if not (self.request.user.is_staff or self.request.user.is_superuser ) and  member.role == "owner":
 				raise PermissionDenied({"detail": "Cannot demote owner."})
 			elif not (self.request.user.is_staff or self.request.user.is_superuser):
 				current_user.role = 'admin'
